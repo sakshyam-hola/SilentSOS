@@ -2,7 +2,7 @@
 
 > ⚡ **Run it in 60 seconds** (details in [How to run SilentSOS](#how-to-run-silentsos)):
 > ```bash
-> git clone <your-repo-url> silentsos && cd silentsos
+> git clone <https://github.com/sakshyam-hola/SilentSOS.git> silentsos && cd silentsos
 > python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
 > pip install -r requirements.txt
 > cp .env.example .env && cp simulator/config.example.json simulator/config.json
