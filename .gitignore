@@ -1,0 +1,7 @@
+.env
+*.db
+simulator/config.json
+firmware/silentsos/config.h
+__pycache__/
+*.pyc
+evolution/
