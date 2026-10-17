@@ -1,5 +1,4 @@
 # SilentSOS
- 
 
 > ⚡ **Run it in 60 seconds** (details in [How to run SilentSOS](#how-to-run-silentsos)):
 > ```bash
@@ -1386,6 +1385,3 @@ any of these work:
    validation); pinning is noted as a production requirement, not code.
 8. **Authenticated read APIs** — `/api/alerts`, `/api/audit`, `/track`,
    `/security` are intentionally open in this demo build.
-
-SilentSOS — discreet emergency-alert system: triple-press a button to send an AES-256-GCM encrypted distress signal with live GPS to trusted contacts over Telegram.
- 8cc11e9d6ed3f01999011eade32798e12b1357ef
