@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SilentSOS — Device Simulator</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<script src="/i18n.js"></script>
+<style>
+/* Inlined copy of backend/static/design-system.css v1 (canonical source). */
+/* ==========================================================================
+   SilentSOS design system v1 — canonical source.
+   Inlined into backend/static/home.html, simulator/web.html,
+   backend/static/track.html and backend/static/security.html
+   (the backend serves pages with no static-file route, so each page
+   carries a copy; keep the copies in sync with this file).
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* palette */
+  --bg:        #0b0e14;
+  --surface:   #161b22;
+  --surface-2: #21262d;
+  --border:    #30363d;
+  --text:      #e6edf3;
+  --muted:     #8b949e;
+  --danger:    #f85149;
+  --danger-strong: #da3633;
+  --success:   #3fb950;
+  --success-strong: #238636;
+  --warning:   #f5d76e;
+  --warning-dim: #9e7a0a;
+  --accent:    #58a6ff;
+  --accent-strong: #1f6feb;
+
+  /* type */
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  --text-xs: .75rem;
+  --text-sm: .875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+
+  /* spacing (8px scale) + radii */
+  --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px;
+  --r-sm: 8px; --r: 12px; --r-lg: 16px;
+
+  --shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+/* --- base --------------------------------------------------------------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font); font-size: var(--text-base); line-height: 1.5;
+  overflow-x: clip;
+  animation: ds-fade-in .35s ease both;
+}
+h1, h2, h3 { line-height: 1.25; margin: 0; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.ds-container { width: 100%; max-width: 720px; margin: 0 auto; padding: var(--s2); }
+.ds-container.wide { max-width: 960px; }
+.ds-stack > * + * { margin-top: var(--s2); }
+
+.ds-section-title {
+  font-size: var(--text-sm); font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .07em; margin: 0 0 var(--s1);
+}
+.ds-muted { color: var(--muted); }
+.ds-mono { font-family: var(--mono); font-size: var(--text-sm); }
+
+/* --- buttons (min 44px touch target) ------------------------------------ */
+.ds-btn, .btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--s1);
+  min-height: 44px; padding: 12px 20px;
+  font: 700 var(--text-base)/1.2 var(--font);
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text);
+  text-decoration: none; cursor: pointer; user-select: none;
+  transition: transform .08s ease, border-color .15s ease, background .15s ease;
+}
+.ds-btn:active, .btn:active { transform: scale(.98); }
+.ds-btn-primary, .btn.primary {
+  background: var(--accent-strong); border-color: var(--accent-strong); color: #fff;
+}
+.ds-btn-danger { background: var(--danger-strong); border-color: var(--danger-strong); color: #fff; }
+.ds-btn-success { background: var(--success-strong); border-color: var(--success-strong); color: #fff; }
+.ds-btn-ghost:hover, .btn:not(.primary):hover { border-color: var(--accent); }
+.ds-btn:disabled, .btn:disabled { opacity: .55; cursor: default; transform: none; }
+.ds-btn-block { width: 100%; }
+
+/* --- badges -------------------------------------------------------------- */
+.ds-badge, .badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-sm); font-weight: 800; letter-spacing: .03em;
+  padding: 6px 12px; border-radius: var(--r-sm); white-space: nowrap;
+  background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border);
+}
+.ds-badge-danger, .badge.active { background: var(--danger-strong); border-color: var(--danger-strong); color: #fff; }
+.ds-badge-success, .badge.resolved { background: var(--success-strong); border-color: var(--success-strong); color: #fff; }
+.ds-badge-warning { background: rgba(245,215,110,.14); border-color: var(--warning-dim); color: var(--warning); }
+.ds-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.badge.active .dot { animation: ds-blink 1.6s infinite; }
+
+/* --- cards ---------------------------------------------------------------- */
+.ds-card, .card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: var(--s2);
+  animation: ds-rise .4s ease both;
+}
+a.card { text-decoration: none; color: inherit; display: block; }
+a.card:active { border-color: var(--accent); }
+
+/* --- toast (non-blocking) -------------------------------------------------- */
+.ds-toast, #map-toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  z-index: 2000; pointer-events: none;
+  background: rgba(13,17,23,.94); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 18px; border-radius: 999px;
+  font-size: var(--text-sm); font-weight: 600; white-space: nowrap;
+  box-shadow: var(--shadow);
+  animation: ds-rise .25s ease both;
+}
+
+/* --- skeleton loader -------------------------------------------------------- */
+.ds-skeleton {
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: ds-shimmer 1.4s infinite linear;
+  color: transparent !important; user-select: none;
+}
+@keyframes ds-shimmer { to { background-position: -200% 0; } }
+
+/* --- modal ------------------------------------------------------------------ */
+.ds-modal-backdrop {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,.6); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: var(--s2);
+  animation: ds-fade-in .2s ease both;
+}
+.ds-modal-backdrop[hidden] { display: none; }
+.ds-modal {
+  width: 100%; max-width: 420px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: var(--s3);
+  box-shadow: var(--shadow);
+  animation: ds-rise .25s ease both;
+}
+.ds-modal h3 { font-size: var(--text-xl); margin-bottom: var(--s1); }
+.ds-modal p { color: var(--muted); margin: 0 0 var(--s3); }
+.ds-modal-actions { display: flex; gap: var(--s1); justify-content: flex-end; }
+.ds-modal-actions .ds-btn, .ds-modal-actions .btn { flex: 1; }
+
+/* --- motion ------------------------------------------------------------------ */
+@keyframes ds-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ds-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes ds-blink { 50% { opacity: .5; } }
+@keyframes ds-ping {
+  0% { transform: scale(.4); opacity: 1; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  body { animation: none; }
+}
+
+/* --- page-specific --- */
+.app-header { padding: var(--s3) var(--s2) var(--s1); text-align: center; }
+.app-header .brand { font-size: var(--text-2xl); font-weight: 800; }
+.app-header .brand span { color: var(--muted); font-weight: 400; font-size: var(--text-lg); }
+.app-header .sub { color: var(--muted); margin: var(--s1) 0 0; font-size: var(--text-sm); }
+.warn-card {
+  border-color: var(--warning-dim); background: rgba(158,122,10,.12);
+  color: var(--warning); font-size: var(--text-sm); text-align: center;
+  margin-bottom: var(--s2);
+}
+.warn-card code { font-family: var(--mono); font-size: var(--text-xs); }
+.panel { display: flex; flex-direction: column; align-items: center; gap: var(--s2);
+  padding: var(--s3) var(--s2); }
+/* The "device": a big round puck button */
+#sos-btn {
+  width: 190px; height: 190px; border-radius: 50%;
+  border: 6px solid var(--border); cursor: pointer; user-select: none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  background: radial-gradient(circle at 35% 30%, #3a4250, var(--surface) 70%);
+  color: var(--text); font: 700 var(--text-lg)/1.2 var(--font);
+  letter-spacing: .06em;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5), inset 0 2px 6px rgba(255,255,255,.08);
+  transition: transform .08s ease, border-color .15s ease, box-shadow .15s ease;
+  animation: ds-rise .45s ease both;
+}
+#sos-btn.pressed { transform: scale(.94); border-color: var(--danger);
+  box-shadow: 0 4px 16px rgba(0,0,0,.5), 0 0 24px rgba(248,81,73,.35); }
+#sos-btn small { display: block; font-weight: 400; font-size: var(--text-xs);
+  color: var(--muted); margin-top: 6px; letter-spacing: 0; }
+.row { display: flex; gap: var(--s1); flex-wrap: wrap; justify-content: center; width: 100%; }
+.row .btn { flex: 1 1 160px; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: var(--s1) var(--s2); width: 100%; font-size: var(--text-sm); color: var(--muted); }
+.fields label { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fields input {
+  background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--r-sm); padding: 10px 12px; font-size: var(--text-base);
+  width: 100%; min-height: 44px; font-family: var(--font);
+}
+.fields input:focus { border-color: var(--accent); outline: none; }
+/* Vibration indicator */
+#vib {
+  width: 100%; text-align: center; font-weight: 700; letter-spacing: .2em;
+  font-size: var(--text-sm); color: var(--success); border: 1px dashed var(--success);
+  border-radius: var(--r); padding: 12px; opacity: .18; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
+}
+#vib.pulse1 { animation: vibflash .5s 1; }
+#vib.pulse3 { animation: vibflash .5s 3; }
+@keyframes vibflash { 0%,100% { opacity: .18; } 50% { opacity: 1; } }
+/* Status log */
+#log {
+  width: 100%; height: 170px; overflow-y: auto; background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--r); padding: 10px 12px;
+  font-family: var(--mono); font-size: var(--text-xs); line-height: 1.6;
+}
+#log .ok { color: var(--success); } #log .err { color: var(--danger); }
+#log .dim { color: var(--muted); }
+/* Safe Walk */
+#safewalk h2 { margin: 0 0 4px; font-size: var(--text-lg); }
+#safewalk .lede { color: var(--muted); font-size: var(--text-sm); margin: 0 0 var(--s2); }
+.dur-row { display: flex; gap: var(--s1); flex-wrap: wrap; width: 100%; margin-bottom: var(--s2); }
+.dur-row .btn { flex: 1 1 0; flex-direction: column; gap: 2px; padding: 10px 8px; }
+.dur-row .btn small { font-weight: 400; font-size: var(--text-xs); color: var(--muted); }
+.dur-row .btn.selected { border-color: var(--accent); background: rgba(88,166,255,.12);
+  box-shadow: 0 0 0 1px var(--accent); }
+.ring-wrap { position: relative; width: 168px; margin: var(--s1) auto; }
+.ring { width: 168px; height: 168px; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 10; }
+.ring-bg { stroke: var(--surface-2); }
+.ring-fg { stroke: var(--success); stroke-linecap: round; transition: stroke .3s; }
+.ring-wrap.low .ring-fg { stroke: var(--danger); }
+.ring-label { position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px; }
+.ring-label span { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ring-label small { color: var(--muted); font-size: var(--text-xs); letter-spacing: .1em; }
+.warn-banner { width: 100%; text-align: center; font-weight: 700; color: var(--warning);
+  background: rgba(245,215,110,.12); border: 1px solid rgba(245,215,110,.5);
+  border-radius: var(--r); padding: 10px; margin-bottom: var(--s1);
+  animation: warnpulse 1s infinite; }
+.warn-banner[hidden] { display: none; }
+@keyframes warnpulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+#sw-pin { background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--r-sm); padding: 10px 12px; font-size: var(--text-base);
+  min-height: 44px; font-family: var(--font); flex: 1 1 140px; text-align: center;
+  letter-spacing: .3em; }
+#sw-pin.shake { animation: shake .4s; border-color: var(--danger); }
+@keyframes shake { 0%,100% { transform: none; } 25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); } }
+.sw-status { width: 100%; text-align: center; font-weight: 700; padding: 12px;
+  border-radius: var(--r); margin-top: var(--s1); }
+.sw-status.ok { color: var(--success); background: rgba(63,185,80,.1);
+  border: 1px solid rgba(63,185,80,.4); }
+.sw-status.sent { color: var(--danger); background: rgba(248,81,73,.08);
+  border: 1px solid rgba(248,81,73,.4); }
+.sw-settings { width: 100%; margin-top: var(--s2); border-top: 1px solid var(--border);
+  padding-top: var(--s1); }
+.sw-settings summary { cursor: pointer; font-weight: 700; min-height: 44px;
+  display: flex; align-items: center; }
+.sw-settings label { display: flex; flex-direction: column; gap: 6px; margin: var(--s1) 0;
+  font-size: var(--text-sm); color: var(--muted); }
+.sw-settings input { background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--r-sm); padding: 10px 12px; font-size: var(--text-base);
+  min-height: 44px; font-family: var(--font); letter-spacing: .3em; max-width: 200px; }
+@media (prefers-reduced-motion: reduce) {
+  .warn-banner, #sw-pin.shake { animation: none; }
+  .ring-fg { transition: none; }
+}
+/* header toggles: language + high contrast */
+.toggles { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: var(--s1); }
+.toggle-btn { min-width: 44px; min-height: 44px; padding: 8px 14px;
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: var(--text-sm);
+  font-weight: 700; cursor: pointer; }
+.toggle-btn:hover { border-color: var(--accent); }
+.toggle-btn[aria-pressed="true"] { border-color: var(--warning); color: var(--warning); }
+/* visible keyboard focus everywhere */
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+/* high-contrast mode */
+body.hc { --bg: #000; --surface: #000; --surface-2: #111;
+  --border: #fff; --text: #fff; --muted: #e8e8e8;
+  --danger: #ff7b72; --success: #56d364; --warning: #ffd60a; --accent: #79c0ff; }
+body.hc .ds-card { border-width: 2px; }
+body.hc :focus-visible { outline: 3px solid #ffd60a; }
+body.hc .ds-skeleton { opacity: .35; }
+</style>
+</head>
+<body>
+<header class="app-header ds-container">
+  <div class="toggles">
+    <button id="lang-toggle" class="toggle-btn" type="button">नेपाली</button>
+    <button id="hc-toggle" class="toggle-btn" type="button" aria-pressed="false" aria-label="Toggle high-contrast mode">HC</button>
+  </div>
+  <div class="brand">📟 <span data-i18n="sim.title">device simulator</span></div>
+  <p class="sub" data-i18n="sim.subtitle">Web edition — talks to the backend through a server-side helper</p>
+</header>
+<main class="ds-container">
+  <div class="ds-card warn-card"><span data-i18n="sim.demo_note">Demo only. A real device keeps its key in firmware,
+    never in the browser. This page sends plaintext fields to</span>
+    <code>/api/simulator/send</code><span data-i18n="sim.demo_note2">; the server encrypts with the
+    device's registry key and runs the exact protocol validation.</span></div>
+
+  <div class="ds-card panel">
+    <button id="sos-btn" data-i18n-aria="sim.sos" aria-label="SOS">SOS<small data-i18n="sim.sos_hint">triple-click within 2 s</small></button>
+
+    <div id="vib" aria-hidden="true" data-i18n="sim.vibration">VIBRATION</div>
+
+    <div class="row">
+      <button class="btn" id="btn-update" data-i18n="sim.send_update">Send update</button>
+      <button class="btn" id="btn-safe" data-i18n="sim.long_press">Long-press (safe)</button>
+    </div>
+
+    <div class="fields">
+      <label><span data-i18n="sim.device_id">device_id</span> <input id="f-device" value="dev-001" autocomplete="off"></label>
+      <label><span data-i18n="sim.battery">battery (0–100)</span> <input id="f-batt" value="87" inputmode="numeric" autocomplete="off"></label>
+      <label>lat <input id="f-lat" value="27.7172" inputmode="decimal" autocomplete="off"></label>
+      <label>lon <input id="f-lon" value="85.3240" inputmode="decimal" autocomplete="off"></label>
+    </div>
+
+    <div id="log" aria-live="polite"></div>
+  </div>
+
+  <div class="ds-card panel" id="safewalk">
+    <h2 data-i18n="sim.sw_title">🚶 Safe Walk</h2>
+    <p class="lede" data-i18n="sim.sw_lede">Start a timer for your walk. Check in before it ends — if you
+      don't, this simulator sends a real encrypted alert through the normal protocol.</p>
+
+    <div id="sw-setup">
+      <div class="dur-row" role="radiogroup" id="sw-dur-group" data-i18n-aria="sim.sw_dur_label" aria-label="Walk duration">
+        <button class="btn dur selected" data-secs="20">20s<small data-i18n="sim.sw_demo">Demo</small></button>
+        <button class="btn dur" data-secs="300">5<small data-i18n="sim.sw_min">min</small></button>
+        <button class="btn dur" data-secs="600">10<small data-i18n="sim.sw_min">min</small></button>
+        <button class="btn dur" data-secs="900">15<small data-i18n="sim.sw_min">min</small></button>
+      </div>
+      <button class="btn primary" id="sw-start" style="width:100%" data-i18n="sim.sw_start">Start Safe Walk</button>
+    </div>
+
+    <div id="sw-active" hidden>
+      <div class="ring-wrap" id="sw-ringwrap">
+        <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-fg" id="sw-ring" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="ring-label"><span id="sw-time">0:20</span><small data-i18n="sim.sw_remaining">REMAINING</small></div>
+      </div>
+      <div id="sw-warn" class="warn-banner" hidden data-i18n="sim.sw_warn">⚠️ 10 seconds left — tap I'm OK</div>
+      <button class="btn primary" id="sw-ok" style="width:100%; margin-bottom: var(--s1)" data-i18n="sim.sw_imok">I'm OK</button>
+      <div class="row">
+        <input id="sw-pin" inputmode="numeric" autocomplete="off" maxlength="12"
+               placeholder="PIN" data-i18n-aria="sim.sw_checkin_pin_label" aria-label="Check-in PIN">
+        <button class="btn" id="sw-pin-go" data-i18n="sim.sw_checkin_pin">Check in with PIN</button>
+      </div>
+      <button class="btn" id="sw-cancel" style="width:100%; margin-top: var(--s1)" data-i18n="sim.sw_cancel">Cancel walk</button>
+    </div>
+
+    <div id="sw-done" class="sw-status" hidden></div>
+
+    <details class="sw-settings">
+      <summary data-i18n="sim.sw_settings">⚙️ Safe Walk settings (demo)</summary>
+      <label><span data-i18n="sim.sw_checkin_pin_label">Check-in PIN</span>
+        <input id="sw-set-pin" value="1234" inputmode="numeric" autocomplete="off" maxlength="12"></label>
+      <label><span data-i18n="sim.sw_duress_pin_label">Duress PIN</span>
+        <input id="sw-set-duress" value="0000" inputmode="numeric" autocomplete="off" maxlength="12"></label>
+      <p class="lede"><strong data-i18n="sim.sw_duress_title">Duress PIN — how the demo works:</strong> <span data-i18n="sim.sw_duress_body">if someone
+        forces you to cancel the timer, enter the duress PIN instead of your
+        check-in PIN. The screen will show the timer as cancelled, exactly like
+        a normal check-in — but SilentSOS silently sends a real encrypted alert
+        to your tier-1 contacts in the background. Nothing on screen reveals it;
+        verify it on the operator home page or the tracking page. In a real
+        product these PINs would live on the device, never in the browser.</span></p>
+    </details>
+  </div>
+</main>
+
+<script>
+const btn = document.getElementById('sos-btn');
+const vib = document.getElementById('vib');
+const logEl = document.getElementById('log');
+let presses = [];
+
+function log(msg, cls) {
+  const t = new Date().toLocaleTimeString();
+  const div = document.createElement('div');
+  if (cls) div.className = cls;
+  div.textContent = `[${t}] ${msg}`;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function vibrate(n) {
+  vib.classList.remove('pulse1', 'pulse3');
+  void vib.offsetWidth; // restart the animation
+  vib.classList.add(n === 1 ? 'pulse1' : 'pulse3');
+  try {
+    if (navigator.vibrate) navigator.vibrate(n === 1 ? 200 : [150, 100, 150, 100, 150]);
+  } catch (e) { /* haptics unsupported */ }
+}
+
+function fields() {
+  return {
+    device_id: document.getElementById('f-device').value.trim(),
+    lat: parseFloat(document.getElementById('f-lat').value),
+    lon: parseFloat(document.getElementById('f-lon').value),
+    battery: parseInt(document.getElementById('f-batt').value, 10),
+  };
+}
+
+async function postSim(type) {
+  const body = { ...fields(), type };
+  const r = await fetch('/api/simulator/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await r.json().catch(() => ({}));
+  return { r, data };
+}
+
+async function sendSim(type) {
+  log(`→ sending "${type}"…`, 'dim');
+  try {
+    const { r, data } = await postSim(type);
+    if (r.ok) {
+      vibrate(1);
+      log(`✓ accepted (HTTP 200) alert_id=${data.alert_id}`, 'ok');
+    } else {
+      vibrate(3);
+      log(`✗ rejected: HTTP ${r.status}`, 'err');
+    }
+  } catch (e) {
+    vibrate(3);
+    log(`✗ network error: ${e}`, 'err');
+  }
+}
+
+btn.addEventListener('click', () => {
+  const t = Date.now();
+  if (presses.length && t - presses[presses.length - 1] < 50) return; // debounce
+  presses.push(t);
+  presses = presses.filter(p => t - p <= 2000);
+  log(`press (${presses.length}/3)`, 'dim');
+  btn.classList.add('pressed');
+  setTimeout(() => btn.classList.remove('pressed'), 120);
+  if (presses.length >= 3) {
+    presses = [];
+    log(I18N.t('sim.log_triple'), 'dim');
+    sendSim('alert');
+  }
+});
+
+document.getElementById('btn-update').addEventListener('click', () => sendSim('update'));
+document.getElementById('btn-safe').addEventListener('click', () => sendSim('safe'));
+
+/* ---- Safe Walk ------------------------------------------------------------
+   Client-side only: the countdown, PIN check-in and duress logic all run in
+   this page. On expiry (or a duress PIN) it sends a normal encrypted "alert"
+   through /api/simulator/send — the exact same protocol path as the SOS
+   button. No backend or protocol change needed. */
+const SW_RING_C = 2 * Math.PI * 52;
+const sw = { timer: null, endAt: 0, total: 0, warned: false };
+const swSetup = document.getElementById('sw-setup');
+const swActive = document.getElementById('sw-active');
+const swDone = document.getElementById('sw-done');
+const swRing = document.getElementById('sw-ring');
+const swRingWrap = document.getElementById('sw-ringwrap');
+const swTime = document.getElementById('sw-time');
+const swWarn = document.getElementById('sw-warn');
+const swPinInput = document.getElementById('sw-pin');
+swRing.style.strokeDasharray = String(SW_RING_C);
+swRing.style.strokeDashoffset = '0';
+
+document.querySelectorAll('.dur-row .dur').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.dur-row .dur').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+  });
+});
+
+function swFmt(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+
+function swShowSetup() {
+  swActive.hidden = true;
+  swDone.hidden = true;
+  swSetup.hidden = false;
+}
+
+function swStop() {
+  if (sw.timer) { clearInterval(sw.timer); sw.timer = null; }
+}
+
+function swTick() {
+  const remain = sw.endAt - Date.now();
+  if (remain <= 0) { swExpire(); return; }
+  const frac = remain / (sw.total * 1000);
+  swRing.style.strokeDashoffset = String(SW_RING_C * (1 - frac));
+  swTime.textContent = swFmt(remain);
+  if (remain <= 10000 && !sw.warned) {
+    sw.warned = true;
+    swWarn.hidden = false;
+    swRingWrap.classList.add('low');
+    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+    vib.classList.remove('pulse1', 'pulse3');
+    void vib.offsetWidth;
+    vib.classList.add('pulse3');
+    log(I18N.t('sim.log_sw_expired_warn'), 'err');
+  }
+}
+
+function swStart() {
+  const secs = parseInt(document.querySelector('.dur-row .dur.selected').dataset.secs, 10);
+  sw.total = secs;
+  sw.endAt = Date.now() + secs * 1000;
+  sw.warned = false;
+  swPinInput.value = '';
+  swWarn.hidden = true;
+  swRingWrap.classList.remove('low');
+  swRing.style.strokeDashoffset = '0';
+  swTime.textContent = swFmt(secs * 1000);
+  swSetup.hidden = true;
+  swDone.hidden = true;
+  swActive.hidden = false;
+  swStop();
+  sw.timer = setInterval(swTick, 250);
+  swTick();
+  log(`🚶 Safe Walk started (${secs >= 60 ? (secs / 60) + ' min' : secs + 's'}) — check in before it ends`, 'dim');
+}
+
+async function swExpire() {
+  swStop();
+  swActive.hidden = true;
+  swDone.hidden = false;
+  swDone.className = 'sw-status sent';
+  swDone.textContent = I18N.t('sim.log_sw_expired_sent');
+  log(I18N.t('sim.log_sw_sending'), 'err');
+  await sendSim('alert');
+  swShowSetupDelayed();
+}
+
+function swShowSetupDelayed() {
+  setTimeout(() => { if (!sw.timer) swShowSetup(); }, 4000);
+}
+
+function swCancel(manual) {
+  swStop();
+  swActive.hidden = true;
+  swDone.hidden = false;
+  swDone.className = 'sw-status ok';
+  swDone.textContent = manual ? I18N.t('sim.log_sw_checked_in') : I18N.t('sim.log_sw_cancelled');
+  swShowSetupDelayed();
+}
+
+async function swDuress() {
+  // Appears to cancel on screen; silently sends a real encrypted alert.
+  swStop();
+  swPinInput.value = '';
+  swActive.hidden = true;
+  swDone.hidden = false;
+  swDone.className = 'sw-status ok';
+  swDone.textContent = I18N.t('sim.log_sw_checked_in');
+  console.info(I18N.t('sim.log_sw_duress'));
+  try {
+    const { r, data } = await postSim('alert');
+    console.info(I18N.t('sim.log_sw_duress_result'), r.status, data.alert_id || '');
+  } catch (e) {
+    console.info(I18N.t('sim.log_sw_duress_fail'), e);
+  }
+  swShowSetupDelayed();
+}
+
+document.getElementById('sw-start').addEventListener('click', swStart);
+document.getElementById('sw-ok').addEventListener('click', () => {
+  log(I18N.t('sim.log_sw_imok'), 'ok');
+  swCancel(true);
+});
+document.getElementById('sw-cancel').addEventListener('click', () => {
+  log(I18N.t('sim.log_sw_user_cancel'), 'dim');
+  swCancel(false);
+});
+document.getElementById('sw-pin-go').addEventListener('click', () => {
+  const val = swPinInput.value.trim();
+  const pin = document.getElementById('sw-set-pin').value.trim();
+  const duress = document.getElementById('sw-set-duress').value.trim();
+  if (val && val === duress) { swDuress(); return; }
+  if (val && val === pin) {
+    log(I18N.t('sim.log_sw_pin'), 'ok');
+    swCancel(true);
+    return;
+  }
+  swPinInput.classList.remove('shake');
+  void swPinInput.offsetWidth;
+  swPinInput.classList.add('shake');
+  swPinInput.value = '';
+  log(I18N.t('sim.log_sw_wrong_pin'), 'err');
+});
+swPinInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('sw-pin-go').click();
+});
+
+log(I18N.t('sim.log_ready'), 'dim');
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(function () {});
+}
+</script>
+</body>
+</html>
