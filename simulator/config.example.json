@@ -1,0 +1,1 @@
+{"base_url":"http://127.0.0.1:8001","battery":87,"device_id":"dev-001","key":"<base64 key printed by: python backend/registry.py --seed>","lat":27.7172,"lon":85.324}
