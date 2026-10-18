@@ -10,7 +10,7 @@
 > uvicorn backend.main:app --port 8001 # then open http://127.0.0.1:8001/simulator and triple-click SOS
 > ```
 
-> **Last verified:** 2026-10-16 — every technical claim below was checked
+> **Last verified:** 2026-10-18 — every technical claim below was checked
 > against the code in this repo (field names, endpoints, environment
 > variables, file paths, pin numbers). Where the old README and the code
 > disagreed, the code won. The "Run it in 60 seconds" commands were
