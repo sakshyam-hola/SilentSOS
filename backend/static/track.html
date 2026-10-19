@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SilentSOS — Live incident</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<script src="/i18n.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+/* Inlined copy of backend/static/design-system.css v1 (canonical source). */
+/* ==========================================================================
+   SilentSOS design system v1 — canonical source.
+   Inlined into backend/static/home.html, simulator/web.html,
+   backend/static/track.html and backend/static/security.html
+   (the backend serves pages with no static-file route, so each page
+   carries a copy; keep the copies in sync with this file).
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* palette */
+  --bg:        #0b0e14;
+  --surface:   #161b22;
+  --surface-2: #21262d;
+  --border:    #30363d;
+  --text:      #e6edf3;
+  --muted:     #8b949e;
+  --danger:    #f85149;
+  --danger-strong: #da3633;
+  --success:   #3fb950;
+  --success-strong: #238636;
+  --warning:   #f5d76e;
+  --warning-dim: #9e7a0a;
+  --accent:    #58a6ff;
+  --accent-strong: #1f6feb;
+
+  /* type */
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  --text-xs: .75rem;
+  --text-sm: .875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+
+  /* spacing (8px scale) + radii */
+  --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px;
+  --r-sm: 8px; --r: 12px; --r-lg: 16px;
+
+  --shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+/* --- base --------------------------------------------------------------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font); font-size: var(--text-base); line-height: 1.5;
+  overflow-x: clip;
+  animation: ds-fade-in .35s ease both;
+}
+h1, h2, h3 { line-height: 1.25; margin: 0; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.ds-container { width: 100%; max-width: 720px; margin: 0 auto; padding: var(--s2); }
+.ds-container.wide { max-width: 960px; }
+.ds-stack > * + * { margin-top: var(--s2); }
+
+.ds-section-title {
+  font-size: var(--text-sm); font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .07em; margin: 0 0 var(--s1);
+}
+.ds-muted { color: var(--muted); }
+.ds-mono { font-family: var(--mono); font-size: var(--text-sm); }
+
+/* --- buttons (min 44px touch target) ------------------------------------ */
+.ds-btn, .btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--s1);
+  min-height: 44px; padding: 12px 20px;
+  font: 700 var(--text-base)/1.2 var(--font);
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text);
+  text-decoration: none; cursor: pointer; user-select: none;
+  transition: transform .08s ease, border-color .15s ease, background .15s ease;
+}
+.ds-btn:active, .btn:active { transform: scale(.98); }
+.ds-btn-primary, .btn.primary {
+  background: var(--accent-strong); border-color: var(--accent-strong); color: #fff;
+}
+.ds-btn-danger { background: var(--danger-strong); border-color: var(--danger-strong); color: #fff; }
+.ds-btn-success { background: var(--success-strong); border-color: var(--success-strong); color: #fff; }
+.ds-btn-ghost:hover, .btn:not(.primary):hover { border-color: var(--accent); }
+.ds-btn:disabled, .btn:disabled { opacity: .55; cursor: default; transform: none; }
+.ds-btn-block { width: 100%; }
+
+/* --- badges -------------------------------------------------------------- */
+.ds-badge, .badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-sm); font-weight: 800; letter-spacing: .03em;
+  padding: 6px 12px; border-radius: var(--r-sm); white-space: nowrap;
+  background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border);
+}
+.ds-badge-danger, .badge.active { background: var(--danger-strong); border-color: var(--danger-strong); color: #fff; }
+.ds-badge-success, .badge.resolved { background: var(--success-strong); border-color: var(--success-strong); color: #fff; }
+.ds-badge-warning { background: rgba(245,215,110,.14); border-color: var(--warning-dim); color: var(--warning); }
+.ds-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.badge.active .dot { animation: ds-blink 1.6s infinite; }
+
+/* --- cards ---------------------------------------------------------------- */
+.ds-card, .card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: var(--s2);
+  animation: ds-rise .4s ease both;
+}
+a.card { text-decoration: none; color: inherit; display: block; }
+a.card:active { border-color: var(--accent); }
+
+/* --- toast (non-blocking) -------------------------------------------------- */
+.ds-toast, #map-toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  z-index: 2000; pointer-events: none;
+  background: rgba(13,17,23,.94); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 18px; border-radius: 999px;
+  font-size: var(--text-sm); font-weight: 600; white-space: nowrap;
+  box-shadow: var(--shadow);
+  animation: ds-rise .25s ease both;
+}
+
+/* --- skeleton loader -------------------------------------------------------- */
+.ds-skeleton {
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: ds-shimmer 1.4s infinite linear;
+  color: transparent !important; user-select: none;
+}
+@keyframes ds-shimmer { to { background-position: -200% 0; } }
+
+/* --- modal ------------------------------------------------------------------ */
+.ds-modal-backdrop {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,.6); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: var(--s2);
+  animation: ds-fade-in .2s ease both;
+}
+.ds-modal-backdrop[hidden] { display: none; }
+.ds-modal {
+  width: 100%; max-width: 420px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: var(--s3);
+  box-shadow: var(--shadow);
+  animation: ds-rise .25s ease both;
+}
+.ds-modal h3 { font-size: var(--text-xl); margin-bottom: var(--s1); }
+.ds-modal p { color: var(--muted); margin: 0 0 var(--s3); }
+.ds-modal-actions { display: flex; gap: var(--s1); justify-content: flex-end; }
+.ds-modal-actions .ds-btn, .ds-modal-actions .btn { flex: 1; }
+
+/* --- motion ------------------------------------------------------------------ */
+@keyframes ds-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ds-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes ds-blink { 50% { opacity: .5; } }
+@keyframes ds-ping {
+  0% { transform: scale(.4); opacity: 1; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  body { animation: none; }
+}
+
+/* --- page-specific: live incident layout --- */
+.track-app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+/* incident status header */
+#topbar {
+  flex: 0 0 auto; display: flex; align-items: center; gap: var(--s2);
+  padding: 12px var(--s2); background: var(--surface);
+  border-bottom: 1px solid var(--border); z-index: 600;
+}
+.incident-head { display: flex; align-items: center; gap: var(--s2); flex: 1; min-width: 0; }
+#status-badge {
+  display: inline-flex; align-items: center; flex: 0 0 auto;
+  font-size: var(--text-lg); font-weight: 800; letter-spacing: .04em;
+  padding: 10px 18px; border-radius: var(--r); color: #fff; white-space: nowrap;
+}
+#status-badge.active { background: var(--danger-strong); animation: ds-blink 1.6s infinite; }
+#status-badge.escalated { background: var(--warning-dim); animation: ds-blink 1.1s infinite; }
+#status-badge.resolved { background: var(--success-strong); }
+.incident-timer { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+#alert-timer { font-family: var(--mono); font-size: var(--text-2xl); font-weight: 800;
+  font-variant-numeric: tabular-nums; }
+#timer-caption { color: var(--muted); font-size: var(--text-xs); text-transform: uppercase;
+  letter-spacing: .07em; font-weight: 700; }
+.icon-btn {
+  flex: 0 0 auto; width: 48px; height: 48px; border-radius: var(--r);
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 1.3rem; cursor: pointer; color: var(--text);
+}
+
+/* map + overlay controls */
+#map { flex: 0 0 55%; min-height: 0; position: relative; z-index: 0; background: var(--bg); }
+.leaflet-container { background: var(--bg); font-family: var(--font); }
+.map-controls { position: absolute; top: 12px; right: 12px; z-index: 500;
+  display: flex; flex-direction: column; gap: 8px; }
+.map-ctl {
+  width: 44px; height: 44px; border-radius: var(--r);
+  background: rgba(13,17,23,.92); border: 1px solid var(--border);
+  color: var(--text); font-size: 1.25rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.map-ctl.on { border-color: var(--accent); color: var(--accent); }
+/* pulsing accuracy ring (Leaflet vector path) */
+.acc-ring { animation: acc-ping 2.2s ease-out infinite;
+  transform-box: fill-box; transform-origin: center; }
+@keyframes acc-ping {
+  0% { transform: scale(.55); opacity: .8; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+/* map fallback when the Leaflet CDN is unreachable */
+.map-fallback { height: 100%; display: flex; align-items: center; justify-content: center;
+  text-align: center; color: var(--muted); font-size: var(--text-sm); padding: var(--s3); }
+
+/* bottom sheet (mobile) / sidebar (desktop) */
+#sheet {
+  flex: 1 1 45%; min-height: 0; display: flex; flex-direction: column;
+  background: var(--bg); border-top: 1px solid var(--border);
+  border-radius: var(--r-lg) var(--r-lg) 0 0; z-index: 500; position: relative;
+}
+.sheet-handle { display: flex; justify-content: center; padding: var(--s1) 0 4px;
+  cursor: grab; touch-action: none; flex: 0 0 auto; }
+.sheet-handle span { width: 44px; height: 5px; border-radius: 999px; background: var(--border); }
+.sheet-body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s1) var(--s2) var(--s2);
+  display: flex; flex-direction: column; gap: var(--s3); }
+.safe-sticky { padding: var(--s2) var(--s2) calc(var(--s2) + env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, var(--bg) 35%); }
+.safe-sticky .btn { min-height: 52px; font-size: var(--text-lg); }
+
+/* stat cards */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat { padding: 12px 14px; }
+.stat-label { font-size: var(--text-xs); color: var(--muted); text-transform: uppercase;
+  letter-spacing: .06em; font-weight: 700; margin-bottom: 4px; }
+.stat-val { font-size: var(--text-xl); font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat-unit { font-size: var(--text-sm); color: var(--muted); font-weight: 400; margin-left: 4px; }
+.batt-bar { height: 8px; border-radius: 999px; background: var(--surface-2); margin-top: 8px; overflow: hidden; }
+#stat-batt-fill { height: 100%; border-radius: 999px; background: var(--success);
+  transition: width .5s ease; width: 0; }
+#stat-batt-fill.warn { background: var(--warning); }
+#stat-batt-fill.low { background: var(--danger); }
+.stat-warn { color: var(--danger); font-size: var(--text-sm); font-weight: 700; margin-top: 6px; }
+.sig-strong { color: var(--success); } .sig-fair { color: var(--warning); } .sig-lost { color: var(--danger); }
+
+/* quick actions */
+.actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-sm { min-height: 44px; padding: 10px 12px; font-size: var(--text-sm); }
+
+/* nearest help */
+.help-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+  margin-bottom: 8px; }
+.help-row .h-icon { font-size: 1.4rem; }
+.help-row .h-info { flex: 1; min-width: 0; }
+.help-row .h-name { font-weight: 700; font-size: var(--text-base); }
+.help-row .h-sub { color: var(--muted); font-size: var(--text-sm); }
+.help-row .btn { flex: 0 0 auto; min-height: 44px; padding: 8px 14px; font-size: var(--text-sm); }
+
+/* contacts */
+#purged { display: none; background: rgba(158,122,10,.14); border: 1px solid var(--warning-dim);
+  color: var(--warning); border-radius: var(--r); padding: 10px 12px;
+  font-size: var(--text-sm); margin-bottom: var(--s1); }
+#contacts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s1); }
+#contacts li {
+  display: flex; justify-content: space-between; align-items: center; gap: var(--s1);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 12px 14px; min-height: 52px; font-size: var(--text-base);
+  animation: ds-rise .35s ease both;
+}
+#contacts li .pill { font-size: var(--text-sm); font-weight: 700; padding: 6px 12px;
+  border-radius: 999px; white-space: nowrap; }
+#contacts li .pill.acked { background: rgba(63,185,80,.16); color: var(--success); }
+#contacts li .pill.notified { background: rgba(139,148,158,.14); color: var(--muted); }
+
+/* timeline */
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.timeline li { position: relative; padding: 0 0 var(--s2) 28px; font-size: var(--text-sm); }
+.timeline li::before {
+  content: ""; position: absolute; left: 7px; top: 6px; width: 9px; height: 9px;
+  border-radius: 50%; background: var(--muted);
+}
+.timeline li::after {
+  content: ""; position: absolute; left: 11px; top: 20px; bottom: -2px; width: 1px;
+  background: var(--border);
+}
+.timeline li:last-child::after { display: none; }
+.timeline li.t-alert::before { background: var(--danger); box-shadow: 0 0 8px rgba(248,81,73,.7); }
+.timeline li.t-safe::before { background: var(--success); }
+.timeline li.t-ack::before { background: var(--accent); }
+.timeline li.t-esc::before { background: var(--warning); box-shadow: 0 0 8px rgba(245,215,110,.6); }
+.timeline li.t-new { animation: t-slide-in .45s ease both; }
+@keyframes t-slide-in {
+  from { opacity: 0; transform: translateX(-14px); }
+  to { opacity: 1; transform: none; }
+}
+.t-ev { display: flex; gap: 10px; align-items: flex-start; }
+.t-icon { font-size: 1.05rem; line-height: 1.35; flex: 0 0 auto; }
+.t-body { min-width: 0; }
+.t-shield { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-xs); font-weight: 700; color: var(--success);
+  background: rgba(63,185,80,.12); border: 1px solid rgba(63,185,80,.45);
+  padding: 4px 10px; border-radius: 999px; }
+.esc-countdown { margin: 0 0 var(--space-2); padding: 10px 14px; border-radius: 12px;
+  background: rgba(245,215,110,.12); border: 1px solid rgba(245,215,110,.45);
+  color: var(--warning); font-size: var(--text-sm); font-weight: 600;
+  display: flex; align-items: center; gap: 8px; }
+.esc-countdown b { font-variant-numeric: tabular-nums; }
+.esc-countdown[hidden] { display: none; }
+.timeline .t-text { color: var(--text); font-weight: 600; }
+.timeline .t-time { color: var(--muted); font-size: var(--text-xs); }
+.timeline .t-more { color: var(--muted); font-size: var(--text-xs); padding-left: 28px; }
+
+/* pulsing marker (kept for tests + design) */
+.pulse-wrap { background: none; border: none; }
+.pulse-dot { width: 18px; height: 18px; border-radius: 50%;
+  background: var(--danger); border: 3px solid #fff;
+  box-shadow: 0 0 10px rgba(248,81,73,.9); position: relative; }
+.pulse-dot::after { content: ""; position: absolute; inset: -12px;
+  border-radius: 50%; border: 3px solid var(--danger);
+  animation: ds-ping 1.5s ease-out infinite; }
+.calm-dot { width: 16px; height: 16px; border-radius: 50%;
+  background: var(--success); border: 3px solid #fff; }
+
+/* desktop split view */
+@media (min-width: 1024px) {
+  .track-app {
+    display: grid; grid-template-columns: 400px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr); height: 100vh; height: 100dvh;
+  }
+  #topbar { grid-column: 1; grid-row: 1; }
+  #sheet {
+    grid-column: 1; grid-row: 2; border-radius: 0;
+    border-top: 1px solid var(--border); border-right: 1px solid var(--border);
+    min-height: 0;
+  }
+  .sheet-handle { display: none; }
+  #map { grid-column: 2; grid-row: 1 / span 2; flex: none; min-height: 0; }
+}
+/* visible keyboard focus everywhere */
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+/* header toggles: language + high contrast */
+.toggles { display: flex; gap: 8px; align-items: center; }
+.toggle-btn { min-width: 44px; min-height: 44px; padding: 8px 12px;
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: var(--text-sm);
+  font-weight: 700; cursor: pointer; }
+.toggle-btn:hover { border-color: var(--accent); }
+.toggle-btn[aria-pressed="true"] { border-color: var(--warning); color: var(--warning); }
+/* high-contrast mode */
+body.hc { --bg: #000; --surface: #000; --surface-2: #111;
+  --border: #fff; --text: #fff; --muted: #e8e8e8;
+  --danger: #ff7b72; --success: #56d364; --warning: #ffd60a; --accent: #79c0ff; }
+body.hc .ds-card, body.hc .stat { border-width: 2px; }
+body.hc :focus-visible { outline: 3px solid #ffd60a; }
+body.hc .ds-skeleton { opacity: .35; }
+/* offline banner */
+#offline-banner { display: none; align-items: center; gap: 8px;
+  background: rgba(245,215,110,.12); border: 1px solid var(--warning);
+  color: var(--warning); border-radius: var(--r); padding: 10px 12px;
+  font-size: var(--text-sm); font-weight: 700; margin-bottom: var(--s2); }
+#offline-banner.show { display: flex; }
+</style>
+</head>
+<body>
+<div class="track-app">
+  <header id="topbar">
+    <div class="incident-head">
+      <span id="status-badge" class="badge active" data-i18n="track.loading">LOADING</span>
+      <div class="incident-timer">
+        <span id="alert-timer">--:--</span>
+        <span id="timer-caption" data-i18n="track.connecting">connecting</span>
+      </div>
+    </div>
+    <div class="toggles">
+      <button id="lang-toggle" class="toggle-btn" type="button">नेपाली</button>
+      <button id="hc-toggle" class="toggle-btn" type="button" aria-pressed="false" aria-label="Toggle high-contrast mode">HC</button>
+      <button id="sound-btn" class="icon-btn" data-i18n-aria="track.sound_off" title="Acknowledgement sound: off" aria-label="Toggle acknowledgement sound">🔇</button>
+    </div>
+  </header>
+
+  <div id="map" role="application" aria-label="Live location map">
+    <div class="map-controls">
+      <button id="recenter-btn" class="map-ctl" data-i18n-aria="track.recenter" title="Recenter on device" aria-label="Recenter on device">⌖</button>
+      <button id="follow-btn" class="map-ctl on" data-i18n-aria="track.follow" title="Follow device" aria-label="Follow device" aria-pressed="true">➤</button>
+    </div>
+  </div>
+
+  <div id="sheet">
+    <div class="sheet-handle" id="sheet-handle" aria-hidden="true"><span></span></div>
+    <div class="sheet-body">
+      <div id="offline-banner" role="status"><span data-i18n="common.offline_banner">📴 Offline — showing last known state</span></div>
+      <div id="esc-countdown" class="esc-countdown" hidden><span data-i18n="track.escalating_in">⏳ Escalating in</span> <b id="esc-time">–</b> <span data-i18n="track.if_nobody">if nobody responds</span></div>
+      <section class="sheet-section" aria-label="Live stats">
+        <div class="stats">
+          <div class="stat ds-card">
+            <div class="stat-label" data-i18n="track.battery">Battery</div>
+            <div class="stat-val"><span id="stat-batt-num">–</span><span class="stat-unit">%</span></div>
+            <div class="batt-bar"><div id="stat-batt-fill"></div></div>
+            <div id="stat-batt-warn" class="stat-warn" hidden data-i18n="track.low_battery">⚠ Low battery</div>
+          </div>
+          <div class="stat ds-card">
+            <div class="stat-label" data-i18n="track.last_update">Last update</div>
+            <div class="stat-val" id="stat-updated">–</div>
+          </div>
+          <div class="stat ds-card">
+            <div class="stat-label" data-i18n="track.speed">Speed</div>
+            <div class="stat-val"><span id="stat-speed">–</span><span class="stat-unit" data-i18n="track.kmh">km/h</span></div>
+          </div>
+          <div class="stat ds-card">
+            <div class="stat-label" data-i18n="track.signal">Signal</div>
+            <div class="stat-val" id="stat-signal">–</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sheet-section" aria-label="Quick actions">
+        <h2 class="ds-section-title" data-i18n="track.quick_actions">Quick actions</h2>
+        <div class="actions-grid">
+          <a class="btn btn-sm" id="act-maps" href="#" target="_blank" rel="noopener" data-i18n="track.maps">🗺 Maps</a>
+          <button class="btn btn-sm" id="act-copy" data-i18n="track.copy_loc">📋 Copy location</button>
+          <button class="btn btn-sm" id="act-share" data-i18n="track.share">🔗 Share link</button>
+          <a class="btn btn-sm btn-danger" id="act-call" href="tel:112" data-i18n-aria="track.call112" title="Call emergency services" data-i18n="track.call112">📞 Call 112</a>
+        </div>
+      </section>
+
+      <section class="sheet-section" aria-label="Nearest help">
+        <h2 class="ds-section-title" data-i18n="track.nearest_help">Estimated nearest help</h2>
+        <div id="help-list">
+          <div class="ds-skeleton" style="height:58px;margin-bottom:8px"></div>
+          <div class="ds-skeleton" style="height:58px"></div>
+        </div>
+        <div class="ds-muted" style="font-size:var(--text-xs);margin-top:6px">
+          <span data-i18n="track.demo_places">Demo places, straight-line distance. Set</span> <span class="ds-mono">HELP_API_URL</span> <span data-i18n="track.demo_places2">to wire a real places API later.</span>
+        </div>
+      </section>
+
+      <section class="sheet-section" aria-label="Timeline">
+        <h2 class="ds-section-title" data-i18n="track.timeline">Timeline</h2>
+        <ol id="timeline" class="timeline">
+          <li><span class="ds-skeleton" style="display:inline-block;width:70%;height:1em">&nbsp;</span></li>
+          <li><span class="ds-skeleton" style="display:inline-block;width:55%;height:1em">&nbsp;</span></li>
+        </ol>
+      </section>
+
+      <section class="sheet-section" aria-label="Trusted contacts">
+        <h2 class="ds-section-title" data-i18n="track.contacts">Trusted contacts</h2>
+        <div id="purged" data-i18n="track.purged">
+          📍 Location data was automatically deleted 24&nbsp;h after this alert was resolved.
+        </div>
+        <ul id="contacts">
+          <li><span class="ds-skeleton" style="display:inline-block;width:60%;height:1em">&nbsp;</span></li>
+          <li><span class="ds-skeleton" style="display:inline-block;width:45%;height:1em">&nbsp;</span></li>
+        </ul>
+      </section>
+    </div>
+    <div class="safe-sticky">
+      <button id="safe-btn" class="btn btn-success ds-btn-block" data-i18n="track.safe_btn">I'm safe / resolve</button>
+      <button id="report-btn" class="btn ds-btn-block" type="button" hidden
+        style="margin-top:8px" data-i18n="track.report">📄 Download incident report</button>
+    </div>
+  </div>
+</div>
+
+<div class="ds-modal-backdrop" id="safe-modal" hidden>
+  <div class="ds-modal" role="dialog" aria-modal="true" aria-labelledby="safe-modal-t">
+    <h3 id="safe-modal-t" data-i18n="track.modal_title">Mark as resolved?</h3>
+    <p data-i18n="track.modal_body">Your trusted contacts will get an "I'm safe" notification.</p>
+    <div class="ds-modal-actions">
+      <button class="btn" id="safe-cancel" data-i18n="track.modal_cancel">Cancel</button>
+      <button class="btn btn-success" id="safe-confirm" data-i18n="track.modal_yes">Yes, I'm safe</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ---- frontend-only configuration -------------------------------------------
+   Escalation is backend-owned: the server notifies tier-2 contacts after
+   ESCALATION_SECONDS (env, default 60) with no acks and stamps
+   escalated_at, which this page reads from the alert API.
+   EMERGENCY_NUMBER: tel: number for the emergency-call button.
+   HELP_API_URL: set to a real places endpoint later (must return
+   [{name, type, lat, lon, phone}]); null = use the demo list below.
+-------------------------------------------------------------------------- */
+const EMERGENCY_NUMBER = "112";
+const HELP_API_URL = null;
+const HELP_PLACES_DEMO = [
+  { name: "Teaching Hospital", type: "hospital", lat: 27.7372, lon: 85.3368, phone: "+97714410911" },
+  { name: "Nepal Police HQ", type: "police", lat: 27.7177, lon: 85.3290, phone: "100" },
+  { name: "Bir Hospital", type: "hospital", lat: 27.7069, lon: 85.3141, phone: "+97714221119" },
+  { name: "Patan Hospital", type: "hospital", lat: 27.6669, lon: 85.3244, phone: "+97715522294" },
+];
+
+const alertId = location.pathname.split("/").filter(Boolean).pop();
+const badge = document.getElementById("status-badge");
+const timerEl = document.getElementById("alert-timer");
+const timerCaption = document.getElementById("timer-caption");
+const contactsEl = document.getElementById("contacts");
+const timelineEl = document.getElementById("timeline");
+const safeBtn = document.getElementById("safe-btn");
+const mapEl = document.getElementById("map");
+const topbarEl = document.getElementById("topbar");
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let map = null, tileLayer = null, pulseIcon = null, calmIcon = null;
+if (typeof L !== "undefined") {
+map = L.map("map", { zoomControl: true }).setView([27.7172, 85.3240], 14);
+
+// --- Tile providers: swap quickly by changing ACTIVE_TILE ---
+const TILE_PROVIDERS = {
+  esri_street: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    options: { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
+  },
+  esri_dark: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    options: { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
+  },
+  esri_satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    options: { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
+  }
+};
+const TILE_ORDER = ['esri_street', 'esri_dark', 'esri_satellite'];
+const ACTIVE_TILE = 'esri_dark';   // change to 'esri_street' or 'esri_satellite' to swap
+
+const activeProvider = TILE_PROVIDERS[ACTIVE_TILE] || TILE_PROVIDERS.esri_dark;
+tileLayer = L.tileLayer(activeProvider.url, activeProvider.options).addTo(map);
+
+// Failover: if tiles keep failing, rotate to the next provider.
+let tileErrors = 0;
+let providerIdx = Math.max(0, TILE_ORDER.indexOf(ACTIVE_TILE));
+tileLayer.on('tileerror', () => {
+  tileErrors++;
+  if (tileErrors > 5) {
+    tileErrors = 0;
+    providerIdx = (providerIdx + 1) % TILE_ORDER.length;
+    showToast(I18N.t('track.toast_tile_switch'));
+    tileLayer.setUrl(TILE_PROVIDERS[TILE_ORDER[providerIdx]].url);
+  }
+});
+
+pulseIcon = L.divIcon({ className: "pulse-wrap",
+  html: '<div class="pulse-dot"></div>', iconSize: [24, 24], iconAnchor: [12, 12] });
+calmIcon = L.divIcon({ className: "pulse-wrap",
+  html: '<div class="calm-dot"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
+} else {
+  // Leaflet CDN unreachable: status, timeline, contacts and the safe
+  // button below still work; only the map tiles are missing. The fallback
+  // is prepended (not innerHTML) so the map control buttons survive.
+  const fb = document.createElement("div");
+  fb.className = "map-fallback";
+  fb.innerHTML = I18N.t("track.map_fallback");
+  mapEl.prepend(fb);
+}
+
+function showToast(msg) {
+  let el = document.getElementById('map-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'map-toast';
+    el.className = 'ds-toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.top = (topbarEl.offsetHeight + 12) + 'px';
+  clearTimeout(el._hide);
+  el._hide = setTimeout(() => { el.style.display = 'none'; }, 2500);
+}
+
+let marker = null, accCircle = null, accRing = null, first = true;
+let trailSegs = [];
+let follow = true;
+let lastData = null;
+let prevAcked = null;
+let lastHelpKey = "";
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function ago(ts) {
+  const s = Math.max(0, Math.floor(Date.now() / 1000) - ts);
+  if (s < 60) return s + "s ago";
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + "m ago";
+  return Math.floor(m / 60) + "h " + (m % 60) + "m ago";
+}
+function fmtDur(s) {
+  s = Math.max(0, Math.floor(s));
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60;
+  const p = n => String(n).padStart(2, "0");
+  return h > 0 ? h + ":" + p(m) + ":" + p(ss) : p(m) + ":" + p(ss);
+}
+function haversineKm(a, b) {
+  const R = 6371, r = Math.PI / 180;
+  const dLat = (b[0] - a[0]) * r, dLon = (b[1] - a[1]) * r;
+  const s = Math.sin(dLat / 2) ** 2 +
+    Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+function speedKmh(trail) {
+  if (!trail || trail.length < 2) return null;
+  const a = trail[trail.length - 2], b = trail[trail.length - 1];
+  const dt = b.ts - a.ts;
+  if (dt <= 0) return null;
+  return haversineKm([a.lat, a.lon], [b.lat, b.lon]) / (dt / 3600);
+}
+
+/* Smooth number counter (battery). Respects reduced-motion. */
+let shownBattery = null;
+function animateBattery(to) {
+  const el = document.getElementById("stat-batt-num");
+  if (!el) return;
+  if (reduceMotion || shownBattery == null) { el.textContent = to; }
+  else {
+    const from = shownBattery, t0 = performance.now(), dur = 600;
+    (function tick(t) {
+      const k = Math.min(1, (t - t0) / dur);
+      el.textContent = Math.round(from + (to - from) * k);
+      if (k < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+  shownBattery = to;
+}
+
+/* Smooth marker glide between updates (eases instead of jumping). */
+let animFrame = null;
+function glideMarkerTo(ll) {
+  const target = L.latLng(ll[0], ll[1]);
+  if (reduceMotion || !marker) { if (marker) marker.setLatLng(target); moveAccuracy(target); return; }
+  const from = marker.getLatLng();
+  if (from.equals(target)) return;
+  cancelAnimationFrame(animFrame);
+  const t0 = performance.now(), dur = 1200;
+  (function step(t) {
+    const k = Math.min(1, (t - t0) / dur);
+    const e = k < .5 ? 2 * k * k : -1 + (4 - 2 * k) * k; // easeInOutQuad
+    const cur = L.latLng(
+      from.lat + (target.lat - from.lat) * e,
+      from.lng + (target.lng - from.lng) * e);
+    marker.setLatLng(cur);
+    moveAccuracy(cur);
+    if (k < 1) animFrame = requestAnimationFrame(step);
+  })(t0);
+}
+function moveAccuracy(ll) {
+  if (accCircle) accCircle.setLatLng(ll);
+  if (accRing) accRing.setLatLng(ll);
+}
+
+/* Fading-gradient trail: older segments are more transparent. */
+function renderTrail(pts, state) {
+  trailSegs.forEach(s => map.removeLayer(s));
+  trailSegs = [];
+  if (!map || pts.length < 2) return;
+  const color = state === "resolved" ? "#3fb950" : "#f85149";
+  const start = Math.max(0, pts.length - 61);
+  const denom = Math.max(1, pts.length - 2 - start);
+  for (let i = start; i < pts.length - 1; i++) {
+    const recency = (i - start) / denom; // 0 = oldest, 1 = newest
+    trailSegs.push(L.polyline(
+      [pts[i], pts[i + 1]],
+      { color: color, weight: 4, opacity: 0.15 + 0.8 * recency }
+    ).addTo(map));
+  }
+}
+
+/* Audit-driven event timeline.
+   Sources: audit_log rows for this alert (alert_created, update_appended)
+   plus the acks table via the alert API's contacts. New events slide in;
+   updates are collapsed into a single "N location updates" event. */
+let auditForAlert = [];
+async function refreshAudit() {
+  try {
+    const r = await fetch("/api/audit?limit=200");
+    if (!r.ok) return;
+    const data = await r.json();
+    auditForAlert = (data.entries || []).filter(e => e.alert_id === alertId);
+  } catch (e) { /* keep previous entries */ }
+  buildTimeline();
+}
+
+function buildTimelineEvents(d, audits) {
+  const evs = [];
+  const created = audits.find(a => a.reason === "alert_created");
+  evs.push({ key: "received", ts: created ? created.received_at : d.created_at,
+    icon: "📡", dot: "t-alert", title: I18N.t("track.tl_received"),
+    sub: I18N.t("track.tl_received_sub"), shield: true });
+  /* Tier 1 is notified at alert start; tier 2 only if/when escalated. */
+  (d.contacts || []).filter(c => (c.tier || 1) === 1).forEach(c => {
+    evs.push({ key: "notified:" + c.id, ts: d.created_at, icon: "🔔", dot: "t-ack",
+      title: I18N.t("track.tl_notified", { name: c.name }),
+      sub: I18N.t("track.tl_tier1") });
+  });
+  const updates = audits.filter(a => a.reason === "update_appended");
+  if (updates.length) {
+    evs.push({ key: "updates", ts: Math.max.apply(null, updates.map(a => a.received_at)),
+      icon: "📍", dot: "", title: updates.length + " " + I18N.t(updates.length === 1 ? "track.tl_update_one" : "track.tl_update_many"),
+      sub: I18N.t("track.tl_updates_sub") });
+  }
+  (d.contacts || []).forEach(c => {
+    if (c.acked && c.acked_at)
+      evs.push({ key: "ack:" + c.id, ts: c.acked_at, icon: "✅", dot: "t-ack",
+        title: I18N.t("track.tl_acked", { name: c.name }), sub: I18N.t("track.tl_acked_sub") });
+  });
+  const ackedCount = (d.contacts || []).filter(c => c.acked).length;
+  if (d.escalated_at) {
+    evs.push({ key: "escalated", ts: d.escalated_at, icon: "⚠️", dot: "t-esc",
+      title: I18N.t("track.tl_escalated"), sub: I18N.t("track.tl_escalated_sub") });
+    (d.contacts || []).filter(c => (c.tier || 1) === 2).forEach(c => {
+      evs.push({ key: "notified2:" + c.id, ts: d.escalated_at, icon: "🔔",
+        dot: "t-ack", title: I18N.t("track.tl_notified", { name: c.name }),
+        sub: I18N.t("track.tl_tier2") });
+    });
+  }
+  if (d.resolved_at)
+    evs.push({ key: "resolved", ts: d.resolved_at, icon: "🏁", dot: "t-safe",
+      title: I18N.t("track.tl_resolved"), sub: I18N.t("track.tl_resolved_sub") });
+  evs.sort((a, b) => a.ts - b.ts);
+  return evs;
+}
+
+const renderedTl = new Map();
+let timelineInit = false;
+function buildTimeline() {
+  if (!lastData) return;
+  if (!timelineInit) { timelineEl.innerHTML = ""; renderedTl.clear(); timelineInit = true; }
+  const evs = buildTimelineEvents(lastData, auditForAlert);
+  const seen = new Set();
+  for (const ev of evs) {
+    seen.add(ev.key);
+    let li = renderedTl.get(ev.key);
+    if (li && li.dataset.ts !== String(ev.ts)) { li.remove(); renderedTl.delete(ev.key); li = null; }
+    if (li) continue; // already shown; static content
+    li = document.createElement("li");
+    li.dataset.ts = String(ev.ts);
+    li.className = (ev.dot ? ev.dot + " " : "") + "t-new";
+    const wrap = document.createElement("div");
+    wrap.className = "t-ev";
+    const icon = document.createElement("span");
+    icon.className = "t-icon";
+    icon.textContent = ev.icon;
+    const body = document.createElement("div");
+    body.className = "t-body";
+    const t = document.createElement("div");
+    t.className = "t-text";
+    t.textContent = ev.title;
+    const when = document.createElement("div");
+    when.className = "t-time";
+    when.textContent = ago(ev.ts);
+    body.appendChild(t);
+    body.appendChild(when);
+    if (ev.shield) {
+      const sh = document.createElement("div");
+      sh.className = "t-shield";
+      sh.textContent = I18N.t("track.tl_shield");
+      body.appendChild(sh);
+    }
+    const sub = document.createElement("div");
+    sub.className = "t-time";
+    sub.textContent = ev.sub;
+    body.appendChild(sub);
+    wrap.appendChild(icon);
+    wrap.appendChild(body);
+    li.appendChild(wrap);
+    const kids = Array.prototype.slice.call(timelineEl.children);
+    const at = kids.findIndex(k => Number(k.dataset.ts) > ev.ts);
+    if (at === -1) timelineEl.appendChild(li);
+    else timelineEl.insertBefore(li, kids[at]);
+    renderedTl.set(ev.key, li);
+  }
+  Array.from(renderedTl.keys()).forEach(k => {
+    if (!seen.has(k)) { renderedTl.get(k).remove(); renderedTl.delete(k); }
+  });
+}
+
+function renderStats(d) {
+  // battery
+  animateBattery(d.battery);
+  const fill = document.getElementById("stat-batt-fill");
+  fill.style.width = Math.max(0, Math.min(100, d.battery)) + "%";
+  fill.className = d.battery < 20 ? "low" : d.battery < 50 ? "warn" : "";
+  document.getElementById("stat-batt-warn").hidden = d.battery >= 20;
+  // speed from last two updates
+  const v = speedKmh(d.trail);
+  document.getElementById("stat-speed").textContent = v == null ? "–" : v.toFixed(1);
+  // signal estimated from update freshness
+  const lastTs = d.trail && d.trail.length ? d.trail[d.trail.length - 1].ts : d.created_at;
+  const ageS = Date.now() / 1000 - lastTs;
+  const sig = document.getElementById("stat-signal");
+  if (ageS < 30) { sig.textContent = I18N.t("track.sig_strong"); sig.className = "stat-val sig-strong"; }
+  else if (ageS < 120) { sig.textContent = I18N.t("track.sig_fair"); sig.className = "stat-val sig-fair"; }
+  else { sig.textContent = I18N.t("track.sig_lost"); sig.className = "stat-val sig-lost"; }
+  document.getElementById("stat-updated").textContent = ago(lastTs);
+}
+
+function updateQuickActions(lat, lon) {
+  document.getElementById("act-maps").href =
+    "https://www.google.com/maps?q=" + lat.toFixed(6) + "," + lon.toFixed(6);
+  document.getElementById("act-copy").onclick = () =>
+    copyText(lat.toFixed(6) + ", " + lon.toFixed(6));
+  document.getElementById("act-share").onclick = async () => {
+    const data = { title: I18N.t("track.share_title"), url: location.href };
+    if (navigator.share) { try { await navigator.share(data); } catch (e) {} }
+    else copyText(location.href);
+  };
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); showToast(I18N.t("track.toast_copied")); }
+  catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); showToast(I18N.t("track.toast_copied")); }
+    catch (_) { showToast(I18N.t("track.toast_copy_fail")); }
+    ta.remove();
+  }
+}
+
+async function getHelpPlaces() {
+  if (HELP_API_URL) {
+    try {
+      const r = await fetch(HELP_API_URL);
+      if (r.ok) return await r.json();
+    } catch (e) { /* fall through to demo data */ }
+  }
+  return HELP_PLACES_DEMO;
+}
+async function renderHelp(lat, lon) {
+  const key = lat.toFixed(4) + "," + lon.toFixed(4);
+  if (key === lastHelpKey) return;
+  lastHelpKey = key;
+  const el = document.getElementById("help-list");
+  const places = (await getHelpPlaces())
+    .map(p => Object.assign({}, p, { dist: haversineKm([lat, lon], [p.lat, p.lon]) }))
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, 4);
+  el.innerHTML = "";
+  const icons = { hospital: "🏥", police: "🚔" };
+  for (const p of places) {
+    const row = document.createElement("div");
+    row.className = "help-row";
+    const icon = document.createElement("span");
+    icon.className = "h-icon";
+    icon.textContent = icons[p.type] || "📍";
+    const info = document.createElement("div");
+    info.className = "h-info";
+    const name = document.createElement("div");
+    name.className = "h-name";
+    name.textContent = p.name;
+    const sub = document.createElement("div");
+    sub.className = "h-sub";
+    sub.textContent = I18N.t("track.km_away", { n: p.dist.toFixed(1) });
+    info.appendChild(name);
+    info.appendChild(sub);
+    const call = document.createElement("a");
+    call.className = "btn btn-sm";
+    call.href = "tel:" + p.phone;
+    call.textContent = I18N.t("track.call_btn");
+    row.appendChild(icon);
+    row.appendChild(info);
+    row.appendChild(call);
+    el.appendChild(row);
+  }
+}
+
+/* Acknowledgement sound (WebAudio beep). Muted by default. */
+let soundOn = false;
+function beep() {
+  if (!soundOn) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ctx = beep.ctx || (beep.ctx = new AC());
+    [880, 1174].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = f;
+      const t = ctx.currentTime + i * 0.18;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + 0.2);
+    });
+  } catch (e) { /* audio unsupported */ }
+}
+document.getElementById("sound-btn").addEventListener("click", function () {
+  soundOn = !soundOn;
+  this.textContent = soundOn ? "🔊" : "🔇";
+  this.title = soundOn ? I18N.t("track.sound_on") : I18N.t("track.sound_off");
+  this.setAttribute("aria-label", this.title);
+  if (soundOn) beep();
+});
+/* Re-render language-dependent content on language switch. */
+document.addEventListener("silentsos:lang", () => {
+  timelineInit = false; // force the keyed timeline to rebuild in the new language
+  refresh();
+});
+/* Register the service worker for installability + offline use. */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(function () {});
+}
+
+/* Recenter + follow controls */
+function setFollow(on) {
+  follow = on;
+  const btn = document.getElementById("follow-btn");
+  if (!btn) return;
+  btn.classList.toggle("on", on);
+  btn.setAttribute("aria-pressed", String(on));
+}
+const recenterBtn = document.getElementById("recenter-btn");
+if (recenterBtn) recenterBtn.addEventListener("click", () => {
+  if (map && marker) map.panTo(marker.getLatLng());
+});
+const followBtn = document.getElementById("follow-btn");
+if (followBtn) followBtn.addEventListener("click", () => {
+  setFollow(!follow);
+  if (follow && map && marker) map.panTo(marker.getLatLng());
+});
+if (map) map.on("dragstart", () => setFollow(false));
+
+/* ---- offline: last-known state -------------------------------------------
+   Every successful refresh is saved to localStorage. When the network is
+   down the page renders the saved state with an "Offline" banner. */
+const LS_KEY = "silentsos:track:" + alertId;
+function remember(d) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ saved_at: Date.now(), data: d })); } catch (e) {}
+}
+function recall() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw).data : null;
+  } catch (e) { return null; }
+}
+function setOffline(off) {
+  document.getElementById("offline-banner").classList.toggle("show", off);
+}
+window.addEventListener("offline", () => setOffline(true));
+window.addEventListener("online", () => { setOffline(false); refresh(); });
+if (!navigator.onLine) setOffline(true);
+
+async function refresh() {
+  try {
+    const r = await fetch("/api/alerts/" + encodeURIComponent(alertId));
+    if (!r.ok) {
+      timerEl.textContent = "--:--";
+      timerCaption.textContent = I18N.t("track.not_found");
+      return;
+    }
+    const d = await r.json();
+    remember(d);
+    // The service worker may have served a cached API response while
+    // offline — the banner follows the real connectivity state.
+    setOffline(!navigator.onLine);
+    renderAlert(d);
+  } catch (e) {
+    const cached = recall();
+    setOffline(true);
+    if (cached) {
+      renderAlert(cached);
+    } else {
+      timerEl.textContent = "--:--";
+      timerCaption.textContent = I18N.t("track.conn_error");
+    }
+  }
+}
+
+function renderAlert(d) {
+    lastData = d;
+    const nowS = Date.now() / 1000;
+    const ackedCount = d.contacts.filter(c => c.acked).length;
+    const state = d.status === "active"
+      ? (d.escalated_at ? "escalated" : "active")
+      : "resolved";
+    badge.textContent = I18N.t(state === "active" ? "track.badge_active" : state === "escalated" ? "track.badge_escalated" : "track.badge_resolved");
+    badge.className = state;
+    timerCaption.textContent = I18N.t(state === "active" ? "track.cap_active"
+      : state === "escalated" ? "track.cap_escalated" : "track.cap_resolved");
+
+    const purged = (d.lat == null || d.lon == null);
+    document.getElementById("purged").style.display = purged ? "block" : "none";
+    if (!purged) {
+      if (map) {
+        const ll = [d.lat, d.lon];
+        if (!marker) {
+          marker = L.marker(ll, { icon: state === "resolved" ? calmIcon : pulseIcon }).addTo(map);
+          accCircle = L.circle(ll, { radius: 35, color: "#58a6ff", weight: 1, opacity: 0.5,
+            fillColor: "#58a6ff", fillOpacity: 0.12 }).addTo(map);
+          accRing = L.circle(ll, { radius: 35, color: "#58a6ff", weight: 2, opacity: 0.6,
+            fill: false, className: "acc-ring" }).addTo(map);
+        } else {
+          marker.setIcon(state === "resolved" ? calmIcon : pulseIcon);
+          glideMarkerTo(ll);
+        }
+        const pts = d.trail.map(p => [p.lat, p.lon]);
+        renderTrail(pts, state);
+        if (first) {
+          if (pts.length > 1) map.fitBounds(L.latLngBounds(pts).pad(0.35));
+          else map.setView(ll, 15);
+          first = false;
+        } else if (follow) {
+          map.panTo(ll);
+        }
+      } else {
+        first = false;
+      }
+      // Stats, quick actions and nearby help render even when the map
+      // library failed (offline): they don't need Leaflet.
+      renderStats(d);
+      updateQuickActions(d.lat, d.lon);
+      renderHelp(d.lat, d.lon);
+    } else {
+      first = false;
+    }
+
+    // ack detection → toast (+ optional sound)
+    const ackedIds = new Set(d.contacts.filter(c => c.acked).map(c => c.id));
+    if (prevAcked !== null) {
+      for (const c of d.contacts) {
+        if (c.acked && !prevAcked.has(c.id)) {
+          showToast(I18N.t("track.toast_acked", { name: c.name }));
+          beep();
+        }
+      }
+    }
+    prevAcked = ackedIds;
+
+    buildTimeline();
+    contactsEl.innerHTML = "";
+    for (const c of d.contacts) {
+      const li = document.createElement("li");
+      const name = document.createElement("span");
+      name.textContent = c.name;
+      const pill = document.createElement("span");
+      pill.className = "pill " + (c.acked ? "acked" : "notified");
+      pill.textContent = c.acked ? I18N.t("track.acked_pill") : I18N.t("track.notified_pill");
+      li.appendChild(name);
+      li.appendChild(pill);
+      contactsEl.appendChild(li);
+    }
+    if (!d.contacts.length) {
+      contactsEl.innerHTML = '<li><span class="ds-muted">' + I18N.t("track.no_contacts") + "</span></li>";
+    }
+    safeBtn.disabled = d.status !== "active";
+    safeBtn.textContent = d.status === "active" ? I18N.t("track.safe_btn") : I18N.t("track.resolved_btn");
+    // Incident report: only meaningful once the alert is resolved.
+    const reportBtn = document.getElementById("report-btn");
+    reportBtn.hidden = d.status !== "resolved";
+}
+
+/* 1s ticker: live incident timer + "last update" age + escalation countdown */
+setInterval(() => {
+  if (!lastData) return;
+  const d = lastData;
+  const active = d.status === "active";
+  const endTs = active ? Date.now() / 1000 : d.resolved_at;
+  timerEl.textContent = fmtDur(endTs - d.created_at);
+  const lastTs = d.trail && d.trail.length ? d.trail[d.trail.length - 1].ts : d.created_at;
+  document.getElementById("stat-updated").textContent = ago(lastTs);
+  /* Escalation countdown: shown only while active, un-acked, un-escalated. */
+  const cd = document.getElementById("esc-countdown");
+  const ackedCount = (d.contacts || []).filter(c => c.acked).length;
+  if (active && !d.escalated_at && ackedCount === 0) {
+    const remain = Math.max(0, (d.escalation_seconds || 60) - (Date.now() / 1000 - d.created_at));
+    cd.hidden = false;
+    document.getElementById("esc-time").textContent =
+      Math.floor(remain / 60) + ":" + String(Math.floor(remain % 60)).padStart(2, "0");
+  } else {
+    cd.hidden = true;
+  }
+}, 1000);
+
+/* Resolve confirmation modal (replaces the native confirm dialog). */
+const safeModal = document.getElementById("safe-modal");
+function openSafeModal() {
+  safeModal.hidden = false;
+  document.getElementById("safe-confirm").focus();
+}
+function closeSafeModal() { safeModal.hidden = true; safeBtn.focus(); }
+safeBtn.addEventListener("click", () => { if (!safeBtn.disabled) openSafeModal(); });
+document.getElementById("report-btn").addEventListener("click", () => {
+  window.open("/report/" + encodeURIComponent(alertId), "_blank", "noopener");
+});
+document.getElementById("safe-cancel").addEventListener("click", closeSafeModal);
+safeModal.addEventListener("click", e => { if (e.target === safeModal) closeSafeModal(); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !safeModal.hidden) closeSafeModal();
+});
+document.getElementById("safe-confirm").addEventListener("click", async () => {
+  closeSafeModal();
+  safeBtn.disabled = true;
+  try {
+    const r = await fetch("/api/alerts/" + encodeURIComponent(alertId) + "/safe",
+                          { method: "POST" });
+    if (!r.ok) { showToast(I18N.t("track.toast_resolve_fail")); safeBtn.disabled = false; }
+  } catch (e) {
+    showToast(I18N.t("track.toast_network"));
+    safeBtn.disabled = false;
+  }
+  refresh();
+});
+
+/* Draggable bottom sheet (mobile only): drag the handle to resize. */
+(function initSheetDrag() {
+  const handle = document.getElementById("sheet-handle");
+  const mq = window.matchMedia("(max-width: 767px)");
+  let mapShare = 55, startY = null, startShare = 55;
+  const SNAPS = [30, 55, 78];
+  function applyShare(snap) {
+    mapShare = snap == null ? mapShare
+      : SNAPS.reduce((a, b) => Math.abs(b - mapShare) < Math.abs(a - mapShare) ? b : a);
+    mapEl.style.flex = "0 0 " + mapShare + "%";
+    if (map) map.invalidateSize();
+  }
+  handle.addEventListener("pointerdown", e => {
+    if (!mq.matches) return;
+    startY = e.clientY; startShare = mapShare;
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener("pointermove", e => {
+    if (startY == null || !mq.matches) return;
+    const avail = window.innerHeight - topbarEl.offsetHeight;
+    mapShare = Math.min(82, Math.max(25, startShare + ((e.clientY - startY) / avail) * 100));
+    mapEl.style.flex = "0 0 " + mapShare + "%";
+  });
+  handle.addEventListener("pointerup", () => {
+    if (startY == null) return;
+    startY = null;
+    if (mq.matches) applyShare(true);
+  });
+  window.addEventListener("resize", () => {
+    mapEl.style.flex = "";
+    mapShare = 55;
+    if (map) map.invalidateSize();
+  });
+})();
+
+document.getElementById("act-call").href = "tel:" + EMERGENCY_NUMBER;
+refresh();
+refreshAudit();
+setInterval(refresh, 3000);
+setInterval(refreshAudit, 10000);
+</script>
+</body>
+</html>
