@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SilentSOS — Security audit log</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<script src="/i18n.js"></script>
+<style>
+/* Inlined copy of backend/static/design-system.css v1 (canonical source). */
+/* ==========================================================================
+   SilentSOS design system v1 — canonical source.
+   Inlined into backend/static/home.html, simulator/web.html,
+   backend/static/track.html and backend/static/security.html
+   (the backend serves pages with no static-file route, so each page
+   carries a copy; keep the copies in sync with this file).
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* palette */
+  --bg:        #0b0e14;
+  --surface:   #161b22;
+  --surface-2: #21262d;
+  --border:    #30363d;
+  --text:      #e6edf3;
+  --muted:     #8b949e;
+  --danger:    #f85149;
+  --danger-strong: #da3633;
+  --success:   #3fb950;
+  --success-strong: #238636;
+  --warning:   #f5d76e;
+  --warning-dim: #9e7a0a;
+  --accent:    #58a6ff;
+  --accent-strong: #1f6feb;
+
+  /* type */
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  --text-xs: .75rem;
+  --text-sm: .875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+
+  /* spacing (8px scale) + radii */
+  --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px;
+  --r-sm: 8px; --r: 12px; --r-lg: 16px;
+
+  --shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+/* --- base --------------------------------------------------------------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font); font-size: var(--text-base); line-height: 1.5;
+  overflow-x: clip;
+  animation: ds-fade-in .35s ease both;
+}
+h1, h2, h3 { line-height: 1.25; margin: 0; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.ds-container { width: 100%; max-width: 720px; margin: 0 auto; padding: var(--s2); }
+.ds-container.wide { max-width: 960px; }
+.ds-stack > * + * { margin-top: var(--s2); }
+
+.ds-section-title {
+  font-size: var(--text-sm); font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .07em; margin: 0 0 var(--s1);
+}
+.ds-muted { color: var(--muted); }
+.ds-mono { font-family: var(--mono); font-size: var(--text-sm); }
+
+/* --- buttons (min 44px touch target) ------------------------------------ */
+.ds-btn, .btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--s1);
+  min-height: 44px; padding: 12px 20px;
+  font: 700 var(--text-base)/1.2 var(--font);
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text);
+  text-decoration: none; cursor: pointer; user-select: none;
+  transition: transform .08s ease, border-color .15s ease, background .15s ease;
+}
+.ds-btn:active, .btn:active { transform: scale(.98); }
+.ds-btn-primary, .btn.primary {
+  background: var(--accent-strong); border-color: var(--accent-strong); color: #fff;
+}
+.ds-btn-danger { background: var(--danger-strong); border-color: var(--danger-strong); color: #fff; }
+.ds-btn-success { background: var(--success-strong); border-color: var(--success-strong); color: #fff; }
+.ds-btn-ghost:hover, .btn:not(.primary):hover { border-color: var(--accent); }
+.ds-btn:disabled, .btn:disabled { opacity: .55; cursor: default; transform: none; }
+.ds-btn-block { width: 100%; }
+
+/* --- badges -------------------------------------------------------------- */
+.ds-badge, .badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-sm); font-weight: 800; letter-spacing: .03em;
+  padding: 6px 12px; border-radius: var(--r-sm); white-space: nowrap;
+  background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border);
+}
+.ds-badge-danger, .badge.active { background: var(--danger-strong); border-color: var(--danger-strong); color: #fff; }
+.ds-badge-success, .badge.resolved { background: var(--success-strong); border-color: var(--success-strong); color: #fff; }
+.ds-badge-warning { background: rgba(245,215,110,.14); border-color: var(--warning-dim); color: var(--warning); }
+.ds-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.badge.active .dot { animation: ds-blink 1.6s infinite; }
+
+/* --- cards ---------------------------------------------------------------- */
+.ds-card, .card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: var(--s2);
+  animation: ds-rise .4s ease both;
+}
+a.card { text-decoration: none; color: inherit; display: block; }
+a.card:active { border-color: var(--accent); }
+
+/* --- toast (non-blocking) -------------------------------------------------- */
+.ds-toast, #map-toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  z-index: 2000; pointer-events: none;
+  background: rgba(13,17,23,.94); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 18px; border-radius: 999px;
+  font-size: var(--text-sm); font-weight: 600; white-space: nowrap;
+  box-shadow: var(--shadow);
+  animation: ds-rise .25s ease both;
+}
+
+/* --- skeleton loader -------------------------------------------------------- */
+.ds-skeleton {
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: ds-shimmer 1.4s infinite linear;
+  color: transparent !important; user-select: none;
+}
+@keyframes ds-shimmer { to { background-position: -200% 0; } }
+
+/* --- modal ------------------------------------------------------------------ */
+.ds-modal-backdrop {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,.6); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: var(--s2);
+  animation: ds-fade-in .2s ease both;
+}
+.ds-modal-backdrop[hidden] { display: none; }
+.ds-modal {
+  width: 100%; max-width: 420px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: var(--s3);
+  box-shadow: var(--shadow);
+  animation: ds-rise .25s ease both;
+}
+.ds-modal h3 { font-size: var(--text-xl); margin-bottom: var(--s1); }
+.ds-modal p { color: var(--muted); margin: 0 0 var(--s3); }
+.ds-modal-actions { display: flex; gap: var(--s1); justify-content: flex-end; }
+.ds-modal-actions .ds-btn, .ds-modal-actions .btn { flex: 1; }
+
+/* --- motion ------------------------------------------------------------------ */
+@keyframes ds-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ds-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes ds-blink { 50% { opacity: .5; } }
+@keyframes ds-ping {
+  0% { transform: scale(.4); opacity: 1; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  body { animation: none; }
+}
+
+/* --- page-specific --- */
+.app-header { padding: var(--s3) var(--s2) var(--s2); }
+.app-header h1 { font-size: var(--text-2xl); font-weight: 800; }
+.app-header .sub { color: var(--muted); margin: var(--s1) 0 var(--s2); max-width: 60ch; }
+/* header toggles: language + high contrast */
+.toggles { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: var(--s1); }
+.toggle-btn { min-width: 44px; min-height: 44px; padding: 8px 14px;
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: var(--text-sm);
+  font-weight: 700; cursor: pointer; }
+.toggle-btn:hover { border-color: var(--accent); }
+.toggle-btn[aria-pressed="true"] { border-color: var(--warning); color: var(--warning); }
+/* visible keyboard focus everywhere */
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+/* high-contrast mode */
+body.hc { --bg: #000; --surface: #000; --surface-2: #111;
+  --border: #fff; --text: #fff; --muted: #e8e8e8;
+  --danger: #ff7b72; --success: #56d364; --warning: #ffd60a; --accent: #79c0ff; }
+body.hc .ds-card, body.hc .counter, body.hc .sim-res { border-width: 2px; }
+body.hc :focus-visible { outline: 3px solid #ffd60a; }
+body.hc .ds-skeleton { opacity: .35; }
+.app-header .sub code { font-family: var(--mono); font-size: var(--text-sm);
+  background: var(--surface-2); padding: 2px 6px; border-radius: 6px; }
+.legend { display: flex; gap: var(--s1); flex-wrap: wrap; align-items: center; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r-lg);
+  background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); min-width: 640px; }
+thead th { text-align: left; color: var(--muted); font-weight: 700; font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: .06em; padding: 12px 16px;
+  border-bottom: 1px solid var(--border); white-space: nowrap; }
+tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { animation: ds-rise .3s ease both; }
+tr.accepted td:first-child { border-left: 3px solid var(--success); }
+tr.rejected td:first-child { border-left: 3px solid var(--danger); }
+tr.accepted { background: rgba(63,185,80,.04); }
+tr.rejected { background: rgba(248,81,73,.05); }
+.outcome { font-weight: 800; font-size: var(--text-xs); letter-spacing: .05em; }
+.outcome.accepted { color: var(--success); }
+.outcome.rejected { color: var(--danger); }
+.reason { font-family: var(--mono); font-size: var(--text-xs); background: var(--surface-2);
+  border-radius: 6px; padding: 4px 8px; white-space: nowrap; }
+.mono { font-family: var(--mono); font-size: var(--text-xs); color: var(--muted); }
+.empty { color: var(--muted); text-align: center; padding: var(--s3); }
+.empty .big { font-size: 2rem; display: block; margin-bottom: var(--s1); }
+/* --- security center ------------------------------------------------------ */
+.sec-stack > * + * { margin-top: var(--s3); }
+.sec-card .lede { color: var(--muted); font-size: var(--text-sm); margin: 0 0 var(--s2); }
+.counters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s1); }
+@media (min-width: 720px) { .counters { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.counter { padding: var(--s2); }
+.counter .n { font-size: var(--text-2xl); font-weight: 800; font-variant-numeric: tabular-nums; }
+.counter .l { font-size: var(--text-xs); font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em; }
+.donut-grid { display: grid; gap: var(--s2); }
+@media (min-width: 720px) { .donut-grid { grid-template-columns: 1fr 230px; align-items: center; } }
+.donut-wrap { position: relative; height: 210px; }
+.v-badge { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-xs);
+  font-weight: 800; padding: 3px 10px; border-radius: 999px; border: 1px solid;
+  white-space: nowrap; }
+.v-ok { color: var(--success); border-color: rgba(63,185,80,.5); background: rgba(63,185,80,.1); }
+.v-info { color: var(--accent); border-color: rgba(88,166,255,.5); background: rgba(88,166,255,.1); }
+.v-warn { color: var(--warning); border-color: rgba(245,215,110,.5); background: rgba(245,215,110,.12); }
+.v-bad { color: var(--danger); border-color: rgba(248,81,73,.5); background: rgba(248,81,73,.1); }
+.feed-row { display: flex; align-items: center; gap: var(--s2); padding: 10px 12px;
+  border-bottom: 1px solid var(--border); cursor: pointer; }
+.feed-row:hover { background: var(--surface-2); }
+.feed-row:last-child { border-bottom: 0; }
+.feed-time { color: var(--muted); font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums; flex: 0 0 58px; }
+.feed-dev { font-family: var(--mono); font-size: var(--text-xs); color: var(--muted);
+  flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed-row .chev { color: var(--muted); }
+.sim-actions { display: flex; gap: var(--s1); flex-wrap: wrap; margin-bottom: var(--s2); }
+.sim-res { border: 1px solid var(--border); border-radius: var(--r); padding: var(--s2);
+  margin-bottom: var(--s1); animation: sim-in .4s ease both; }
+.sim-res .row1 { display: flex; align-items: center; gap: var(--s1); flex-wrap: wrap;
+  margin-bottom: var(--s1); }
+@keyframes sim-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.drawer-bg { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 40; }
+.drawer-bg[hidden] { display: none; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(430px, 94vw);
+  background: var(--surface); border-left: 1px solid var(--border); z-index: 41;
+  padding: var(--s3) var(--s2); overflow-y: auto; }
+.drawer[hidden] { display: none; }
+.drawer h3 { margin: 0 0 var(--s1); }
+.drawer .kv { display: flex; justify-content: space-between; gap: var(--s2);
+  padding: 6px 0; border-bottom: 1px solid var(--border); font-size: var(--text-sm); }
+.drawer .kv span:first-child { color: var(--muted); }
+.check { list-style: none; margin: var(--s2) 0; padding: 0; }
+.check li { display: flex; gap: 10px; align-items: center; padding: 8px 0;
+  border-bottom: 1px solid var(--border); font-size: var(--text-sm); }
+.check .mk { width: 24px; height: 24px; border-radius: 50%; display: inline-flex;
+  align-items: center; justify-content: center; font-weight: 800; flex: 0 0 24px;
+  font-size: var(--text-sm); }
+.check li.pass .mk { color: var(--success); border: 1px solid rgba(63,185,80,.5);
+  background: rgba(63,185,80,.12); }
+.check li.fail .mk { color: var(--danger); border: 1px solid rgba(248,81,73,.5);
+  background: rgba(248,81,73,.12); }
+.check li.skip { color: var(--muted); }
+.check li.skip .mk { color: var(--muted); border: 1px solid var(--border); }
+.check.mini li { padding: 5px 0; border-bottom: 0; }
+.why { margin: 0; padding: 0; list-style: none; }
+.why li { margin-bottom: var(--s2); line-height: 1.6; font-size: var(--text-sm); }
+.why li:last-child { margin-bottom: 0; }
+.why b { display: block; margin-bottom: 2px; }
+@media (prefers-reduced-motion: reduce) { .sim-res { animation: none; } }
+/* mobile: table becomes stacked cards */
+@media (max-width: 767px) {
+  .table-wrap { border: none; background: none; overflow: visible; }
+  table, thead, tbody { display: block; min-width: 0; }
+  thead { display: none; }
+  tbody tr {
+    display: block; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: var(--s2); margin-bottom: var(--s1);
+  }
+  tbody tr.accepted, tbody tr.rejected { background: var(--surface); }
+  tbody td { display: flex; justify-content: space-between; align-items: center;
+    gap: var(--s2); border: none; padding: 6px 0; }
+  tbody td::before { content: attr(data-th); color: var(--muted); font-size: var(--text-xs);
+    text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+  tbody td.empty-row { display: block; text-align: center; }
+  tbody td.empty-row::before { display: none; }
+}
+</style>
+</head>
+<body>
+<header class="app-header ds-container wide">
+  <div class="toggles">
+    <button id="lang-toggle" class="toggle-btn" type="button">नेपाली</button>
+    <button id="hc-toggle" class="toggle-btn" type="button" aria-pressed="false" aria-label="Toggle high-contrast mode">HC</button>
+  </div>
+  <h1 data-i18n="sec.title">🔒 Security center</h1>
+  <p class="sub"><span data-i18n="sec.sub1">Live audit log of every</span> <code>/api/alert</code> <span data-i18n="sec.sub2">request — accepted or
+    rejected — with the validation check that decided it. Feed refreshes every 2 s.</span></p>
+  <div class="legend">
+    <a class="ds-btn" href="/" style="margin-left:auto" data-i18n="common.home">← operator home</a>
+  </div>
+</header>
+<main class="ds-container wide sec-stack">
+  <section class="ds-card sec-card" aria-label="Blocked attacks">
+    <h2 class="ds-section-title" data-i18n="sec.blocked_title">🛡️ Attacks blocked</h2>
+    <div class="donut-grid">
+      <div class="counters" id="counters">
+        <div class="ds-card counter"><div class="n"><div class="ds-skeleton" style="height:30px"></div></div><div class="l">Blocked</div></div>
+        <div class="ds-card counter"><div class="n"><div class="ds-skeleton" style="height:30px"></div></div><div class="l">…</div></div>
+        <div class="ds-card counter"><div class="n"><div class="ds-skeleton" style="height:30px"></div></div><div class="l">…</div></div>
+      </div>
+      <div class="donut-wrap" id="donut-wrap"><div class="ds-skeleton" style="height:210px;border-radius:12px"></div></div>
+    </div>
+    <p class="lede" style="margin-top:var(--s2);margin-bottom:0" data-i18n="sec.counts_note">Counts cover the last 500 requests in the audit log.</p>
+  </section>
+
+  <section class="ds-card sec-card" aria-label="Simulate attack">
+    <h2 class="ds-section-title" data-i18n="sec.sim_title">🧪 Simulate attack</h2>
+    <p class="lede" data-i18n="sec.sim_lede">Fire a real attack at the live validation chain — from an ephemeral
+      attacker device, so nothing real is disturbed. Watch each one get rejected below.</p>
+    <div class="sim-actions">
+      <button class="btn" data-sim="replay" data-i18n="sec.sim_replay">🔁 Replay attack</button>
+      <button class="btn" data-sim="tampered" data-i18n="sec.sim_tampered">✂️ Tampered packet</button>
+      <button class="btn" data-sim="flood" data-i18n="sec.sim_flood">🌊 Flood ×8</button>
+    </div>
+    <div id="sim-results" hidden></div>
+  </section>
+
+  <section class="ds-card sec-card" aria-label="Live request feed">
+    <h2 class="ds-section-title" data-i18n="sec.feed_title">📡 Live request feed</h2>
+    <p class="lede" data-i18n="sec.feed_lede">Newest first — click any row for the per-request validation checklist.</p>
+    <div id="feed">
+      <div class="ds-skeleton" style="height:18px;margin:10px 12px"></div>
+      <div class="ds-skeleton" style="height:18px;margin:10px 12px"></div>
+      <div class="ds-skeleton" style="height:18px;margin:10px 12px"></div>
+    </div>
+  </section>
+
+  <section class="ds-card sec-card" aria-label="Why this is secure">
+    <h2 class="ds-section-title" data-i18n="sec.why_title">💡 Why this is secure</h2>
+    <ul class="why">
+      <li><b data-i18n="sec.why_1t">🔐 Nobody can read or forge an alert.</b> <span data-i18n="sec.why_1b">Each device shares a unique
+        256-bit secret with the server. Every message is encrypted with AES-256-GCM —
+        an interceptor sees only noise, and changing even one bit breaks the
+        authentication tag, so the server rejects it.</span></li>
+      <li><b data-i18n="sec.why_2t">🔁 Old messages can't be replayed.</b> <span data-i18n="sec.why_2b">Every message carries a one-time
+        random number (nonce). Send the same packet twice and the server recognizes
+        the duplicate and blocks it — that's the replay attack, and it fails.</span></li>
+      <li><b data-i18n="sec.why_3t">⏱️ Messages expire in 60 seconds.</b> <span data-i18n="sec.why_3b">An attacker can't record an alert
+        today and replay it next week — stale timestamps are rejected.</span></li>
+      <li><b data-i18n="sec.why_4t">🌊 Flooding doesn't work.</b> <span data-i18n="sec.why_4b">Each device may send at most 5 messages
+        per minute. Anything beyond that is rejected until the window slides.</span></li>
+      <li><b data-i18n="sec.why_5t">📝 Nothing happens silently.</b> <span data-i18n="sec.why_5b">Every request — accepted or rejected —
+        lands in the audit log above with the exact check that decided it. If
+        someone probes the system, you see it here.</span></li>
+    </ul>
+  </section>
+</main>
+
+<div class="drawer-bg" id="drawer-bg" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Request detail">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s1)">
+    <h3 data-i18n="sec.drawer_title">Request detail</h3>
+    <button class="btn" id="drawer-close" style="min-height:36px;padding:6px 14px" data-i18n-aria="common.close" aria-label="Close">✕</button>
+  </div>
+  <div id="drawer-body"></div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function ago(ts) {
+  const s = Math.max(0, Math.floor(Date.now() / 1000) - ts);
+  if (s < 60) return I18N.t("common.ago_s", { n: s });
+  const m = Math.floor(s / 60);
+  if (m < 60) return I18N.t("common.ago_m", { n: m });
+  return I18N.t("common.ago_h", { n: Math.floor(m / 60), m: m % 60 });
+}
+
+/* Verdicts + validation checklist — mirrors backend/demo.py so the feed,
+   the drawer, and the simulate buttons all agree. Labels are translated. */
+function verdictFor(outcome, reason) {
+  const T = I18N.t;
+  if (outcome === "accepted") {
+    return {
+      alert_created: [T("sec.v_accepted"), "ok"],
+      update_appended: [T("sec.v_accepted_update"), "ok"],
+      safe_resolved: [T("sec.v_accepted_safe"), "ok"],
+      safe_noop: [T("sec.v_accepted_noop"), "ok"],
+      cooldown_ignored: [T("sec.v_accepted_deduped"), "ok"],
+      escalated_tier2: [T("sec.v_escalated"), "warn"],
+    }[reason] || [T("sec.v_accepted"), "ok"];
+  }
+  return {
+    replay: [T("sec.v_replay"), "bad"],
+    decryption: [T("sec.v_tampered"), "bad"],
+    freshness: [T("sec.v_expired"), "warn"],
+    rate_limit: [T("sec.v_rate"), "warn"],
+    registry: [T("sec.v_unknown"), "bad"],
+  }[reason] || [T("sec.v_malformed"), "bad"];
+}
+function stepLabels() {
+  const T = I18N.t;
+  return [T("sec.step_device"), T("sec.step_tag"), T("sec.step_time"),
+          T("sec.step_nonce"), T("sec.step_rate")];
+}
+function stepsFor(outcome, reason) {
+  let states;
+  if (reason === "escalated_tier2") states = ["skip","skip","skip","skip","skip"];
+  else if (outcome === "accepted") states = ["pass","pass","pass","pass","pass"];
+  else states = {
+    registry:   ["fail","skip","skip","skip","skip"],
+    decryption: ["pass","fail","skip","skip","skip"],
+    plaintext:  ["pass","pass","skip","skip","skip"],
+    freshness:  ["pass","pass","fail","skip","skip"],
+    replay:     ["pass","pass","pass","fail","skip"],
+    rate_limit: ["pass","pass","pass","pass","fail"],
+  }[reason] || ["skip","skip","skip","skip","skip"];
+  return stepLabels().map((label, i) => ({ label, state: states[i] }));
+}
+function blockedCats() {
+  const T = I18N.t;
+  return [
+    ["replay", T("sec.v_replay"), "#f85149"],
+    ["decryption", T("sec.v_tampered"), "#ff7b72"],
+    ["freshness", T("sec.v_expired"), "#f5d76e"],
+    ["rate_limit", T("sec.v_rate"), "#d29922"],
+    ["registry", T("sec.v_unknown"), "#bc8cff"],
+  ];
+}
+
+let lastEntries = [];
+let donut = null, lastDonutKey = "";
+
+function badge(label, kind) {
+  return `<span class="v-badge v-${kind}">${esc(label)}</span>`;
+}
+
+function renderFeed(entries) {
+  lastEntries = entries;
+  const el = document.getElementById("feed");
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty"><span class="big">📡</span>' + esc(I18N.t("sec.feed_empty")) + "</div>";
+    return;
+  }
+  el.innerHTML = "";
+  for (const e of entries) {
+    const [label, kind] = verdictFor(e.outcome, e.reason);
+    const row = document.createElement("div");
+    row.className = "feed-row";
+    const t = document.createElement("span");
+    t.className = "feed-time";
+    t.textContent = ago(e.received_at);
+    const b = document.createElement("span");
+    b.innerHTML = badge(label, kind);
+    const dev = document.createElement("span");
+    dev.className = "feed-dev";
+    dev.textContent = e.device_id || "—";
+    const chev = document.createElement("span");
+    chev.className = "chev";
+    chev.textContent = "›";
+    row.append(t, b, dev, chev);
+    row.addEventListener("click", () => openDrawer(e));
+    el.appendChild(row);
+  }
+}
+
+function renderCounters(entries) {
+  const counts = {};
+  const cats = blockedCats();
+  let blocked = 0;
+  for (const e of entries) {
+    if (e.outcome !== "rejected") continue;
+    blocked++;
+    const cat = cats.some(([r]) => r === e.reason) ? e.reason : "other";
+    counts[cat] = (counts[cat] || 0) + 1;
+  }
+  const defs = [[I18N.t("sec.blocked"), blocked], ...cats.map(([r, l]) => [l, counts[r] || 0])];
+  document.getElementById("counters").innerHTML = defs.map(([l, n]) =>
+    `<div class="ds-card counter"><div class="n">${n}</div><div class="l">${esc(l)}</div></div>`
+  ).join("");
+  // donut
+  const key = JSON.stringify(counts) + "|" + I18N.lang;
+  const wrap = document.getElementById("donut-wrap");
+  if (key === lastDonutKey) return;
+  lastDonutKey = key;
+  if (!blocked || !window.Chart) {
+    wrap.innerHTML = '<div class="empty"><span class="big">🍩</span>' +
+      (blocked ? I18N.t("sec.donut_cdn") : I18N.t("sec.donut_empty")) + "</div>";
+    if (donut) { donut.destroy(); donut = null; }
+    return;
+  }
+  wrap.innerHTML = '<canvas id="sec-donut" aria-label="' + esc(I18N.t("sec.donut_aria")) + '"></canvas>';
+  if (donut) donut.destroy();
+  donut = new Chart(document.getElementById("sec-donut"), {
+    type: "doughnut",
+    data: {
+      labels: cats.map(([, l]) => l),
+      datasets: [{ data: cats.map(([r]) => counts[r] || 0),
+                   backgroundColor: cats.map(([, , c]) => c),
+                   borderWidth: 0 }],
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: "right", labels: { color: "#8b949e", boxWidth: 12 } } },
+      cutout: "62%" },
+  });
+}
+
+async function load() {
+  try {
+    const r = await fetch("/api/audit?limit=500");
+    const data = await r.json();
+    const entries = data.entries || [];
+    renderFeed(entries);
+    renderCounters(entries);
+  } catch (e) {
+    document.getElementById("feed").innerHTML =
+      '<div class="empty">' + esc(I18N.t("sec.feed_fail")) + "</div>";
+  }
+}
+
+/* --- detail drawer -------------------------------------------------------- */
+function checkList(steps) {
+  const ul = document.createElement("ul");
+  ul.className = "check";
+  for (const s of steps) {
+    const li = document.createElement("li");
+    li.className = s.state;
+    const mk = document.createElement("span");
+    mk.className = "mk";
+    mk.textContent = s.state === "pass" ? "✓" : s.state === "fail" ? "✕" : "–";
+    const lb = document.createElement("span");
+    lb.textContent = s.label;
+    li.append(mk, lb);
+    ul.appendChild(li);
+  }
+  return ul;
+}
+function openDrawer(e) {
+  const [label, kind] = verdictFor(e.outcome, e.reason);
+  const body = document.getElementById("drawer-body");
+  body.innerHTML = "";
+  const rows = [
+    [I18N.t("sec.drawer_verdict"), ""], [I18N.t("sec.drawer_device"), e.device_id || "—"],
+    [I18N.t("sec.drawer_time"), new Date(e.received_at * 1000).toLocaleString()],
+    [I18N.t("sec.drawer_check"), e.reason],
+    [I18N.t("sec.drawer_alert"), (e.alert_id || "—").slice(0, 13)],
+  ];
+  const vkey = I18N.t("sec.drawer_verdict");
+  for (const [k, v] of rows) {
+    const div = document.createElement("div");
+    div.className = "kv";
+    const a = document.createElement("span"); a.textContent = k;
+    const b = document.createElement("span");
+    if (k === vkey) b.innerHTML = badge(label, kind);
+    else { b.textContent = v; b.className = "mono"; }
+    div.append(a, b);
+    body.appendChild(div);
+  }
+  const note = document.createElement("p");
+  note.className = "lede";
+  note.style.cssText = "color:var(--muted);font-size:var(--text-sm);margin:var(--s2) 0 0";
+  note.textContent = e.reason === "escalated_tier2"
+    ? I18N.t("sec.drawer_note_sys")
+    : I18N.t("sec.drawer_note");
+  body.appendChild(checkList(stepsFor(e.outcome, e.reason)));
+  body.appendChild(note);
+  document.getElementById("drawer").hidden = false;
+  document.getElementById("drawer-bg").hidden = false;
+}
+function closeDrawer() {
+  document.getElementById("drawer").hidden = true;
+  document.getElementById("drawer-bg").hidden = true;
+}
+document.getElementById("drawer-close").addEventListener("click", closeDrawer);
+document.getElementById("drawer-bg").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+
+/* --- simulate attacks ------------------------------------------------------ */
+document.querySelectorAll("[data-sim]").forEach(btn => {
+  btn.addEventListener("click", () => simulate(btn.dataset.sim, btn));
+});
+async function simulate(kind, btn) {
+  const box = document.getElementById("sim-results");
+  btn.disabled = true;
+  document.querySelectorAll("[data-sim]").forEach(b => b.disabled = true);
+  box.hidden = false;
+  box.innerHTML = `<div class="lede">${esc(I18N.t("sec.sim_firing", { kind }))}</div>`;
+  try {
+    const r = await fetch("/api/demo/simulate-attack", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attack: kind }),
+    });
+    const data = await r.json();
+    box.innerHTML = `<div class="lede">${esc(I18N.t("sec.sim_attacker"))} <span class="mono">${esc(data.device_id)}</span> ${esc(I18N.t("sec.sim_ephemeral"))}</div>`;
+    for (const res of data.results) {
+      const div = document.createElement("div");
+      div.className = "sim-res";
+      const row1 = document.createElement("div");
+      row1.className = "row1";
+      const [vlabel, vkind] = verdictFor(res.outcome, res.reason);
+      row1.innerHTML = badge(vlabel, vkind) +
+        `<span class="mono">HTTP ${res.code}</span><span class="lede" style="margin:0">${esc(res.note)}</span>`;
+      div.appendChild(row1);
+      const ul = document.createElement("ul");
+      ul.className = "check mini";
+      const steps = stepsFor(res.outcome, res.reason);
+      for (const st of steps) {
+        const li = document.createElement("li");
+        li.className = st.state;
+        li.innerHTML = `<span class="mk">${st.state === "pass" ? "✓" : st.state === "fail" ? "✕" : "–"}</span><span>${esc(st.label)}</span>`;
+        ul.appendChild(li);
+      }
+      div.appendChild(ul);
+      box.appendChild(div);
+      await new Promise(r2 => setTimeout(r2, 400)); // staggered, real-time feel
+    }
+  } catch (e) {
+    box.innerHTML = '<div class="empty">' + esc(I18N.t("sec.sim_failed")) + "</div>";
+  } finally {
+    document.querySelectorAll("[data-sim]").forEach(b => b.disabled = false);
+    load(); // the audit rows land in the live feed immediately
+  }
+}
+
+load();
+setInterval(load, 2000);
+// Re-render on language switch (verdicts, counters, donut, drawer labels).
+document.addEventListener("silentsos:lang", () => { lastDonutKey = ""; load(); });
+// Register the service worker for installability + offline use.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(function () {});
+}
+</script>
+</body>
+</html>
