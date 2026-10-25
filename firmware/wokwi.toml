@@ -1,0 +1,13 @@
+# Wokwi project config for the SilentSOS ESP32 firmware.
+#
+# Web flow (recommended): on wokwi.com create an ESP32 project, paste
+# firmware/silentsos/silentsos.ino, add config.h, and replace diagram.json
+# with firmware/diagram.json. Libraries (TinyGPS++) are auto-installed
+# from the #include lines — no local build needed.
+#
+# CLI flow: build the firmware locally (arduino-cli / PlatformIO), then
+# point `firmware`/`elf` at the build output and run `wokwi-cli .`
+[wokwi]
+version = 1
+# firmware = "build/silentsos.ino.bin"
+# elf = "build/silentsos.ino.elf"
