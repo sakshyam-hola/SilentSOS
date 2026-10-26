@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SilentSOS — Operator</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<script src="/i18n.js"></script>
+<style>
+/* Inlined copy of backend/static/design-system.css v1 (canonical source). */
+/* ==========================================================================
+   SilentSOS design system v1 — canonical source.
+   Inlined into backend/static/home.html, simulator/web.html,
+   backend/static/track.html and backend/static/security.html
+   (the backend serves pages with no static-file route, so each page
+   carries a copy; keep the copies in sync with this file).
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* palette */
+  --bg:        #0b0e14;
+  --surface:   #161b22;
+  --surface-2: #21262d;
+  --border:    #30363d;
+  --text:      #e6edf3;
+  --muted:     #8b949e;
+  --danger:    #f85149;
+  --danger-strong: #da3633;
+  --success:   #3fb950;
+  --success-strong: #238636;
+  --warning:   #f5d76e;
+  --warning-dim: #9e7a0a;
+  --accent:    #58a6ff;
+  --accent-strong: #1f6feb;
+
+  /* type */
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  --text-xs: .75rem;
+  --text-sm: .875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+
+  /* spacing (8px scale) + radii */
+  --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px;
+  --r-sm: 8px; --r: 12px; --r-lg: 16px;
+
+  --shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+/* --- base --------------------------------------------------------------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font); font-size: var(--text-base); line-height: 1.5;
+  overflow-x: clip;
+  animation: ds-fade-in .35s ease both;
+}
+h1, h2, h3 { line-height: 1.25; margin: 0; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.ds-container { width: 100%; max-width: 720px; margin: 0 auto; padding: var(--s2); }
+.ds-container.wide { max-width: 960px; }
+.ds-stack > * + * { margin-top: var(--s2); }
+
+.ds-section-title {
+  font-size: var(--text-sm); font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .07em; margin: 0 0 var(--s1);
+}
+.ds-muted { color: var(--muted); }
+.ds-mono { font-family: var(--mono); font-size: var(--text-sm); }
+
+/* --- demo scenario ------------------------------------------------------- */
+.demo-card { margin-bottom: var(--s3); }
+.btn[hidden] { display: none; }
+
+/* --- dashboard ----------------------------------------------------------- */
+.dash-stack > * + * { margin-top: var(--s3); }
+.kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s2); }
+@media (min-width: 720px) { .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.kpi { padding: var(--s2); }
+.kpi-label { font-size: var(--text-xs); font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+.kpi-val { font-size: var(--text-2xl); font-weight: 800;
+  font-variant-numeric: tabular-nums; }
+.kpi-sub { font-size: var(--text-xs); color: var(--muted); margin-top: 4px; }
+.skel-kpi { height: 34px; border-radius: 8px; }
+.chart-wrap { position: relative; height: 260px; }
+.skel-chart { height: 260px; border-radius: var(--r); }
+.empty { color: var(--muted); text-align: center; padding: var(--s3) var(--s2); }
+.empty .big { font-size: 2.2rem; display: block; margin-bottom: var(--s1); }
+/* device rows */
+.dev-row { padding: var(--s2); margin-bottom: var(--s1); }
+.dev-top { display: flex; align-items: center; justify-content: space-between;
+  gap: var(--s1); }
+.dev-top b { font-size: var(--text-base); }
+.dev-sub { font-size: var(--text-sm); color: var(--muted); margin-top: 6px; }
+.badge.online { color: var(--success); border: 1px solid rgba(63,185,80,.5);
+  background: rgba(63,185,80,.1); }
+.badge.offline { color: var(--muted); border: 1px solid var(--border);
+  background: var(--surface-2); }
+.sig { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+.sig i { width: 4px; border-radius: 1px; background: var(--border); display: block; }
+.sig i:nth-child(1) { height: 4px; } .sig i:nth-child(2) { height: 7px; }
+.sig i:nth-child(3) { height: 10px; } .sig i:nth-child(4) { height: 13px; }
+.sig.lvl4 i, .sig.lvl3 i:nth-child(-n+3), .sig.lvl2 i:nth-child(-n+2),
+.sig.lvl1 i:nth-child(-n+1) { background: var(--success); }
+.sig.lvl2 i:nth-child(-n+2) { background: var(--warning); }
+.sig.lvl1 i:nth-child(-n+1) { background: var(--danger); }
+/* alerts table */
+.dash-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.dash-table th, .dash-table td { text-align: left; padding: 10px 12px;
+  border-bottom: 1px solid var(--border); vertical-align: middle; }
+.dash-table th { color: var(--muted); font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+.dash-table .btn { min-height: 36px; padding: 6px 14px; font-size: var(--text-sm); }
+@media (max-width: 767px) {
+  .dash-table thead { display: none; }
+  .dash-table, .dash-table tbody { display: block; }
+  .dash-table tbody tr { display: block; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--r-lg);
+    padding: var(--s1) var(--s2); margin-bottom: var(--s1); }
+  .dash-table tbody td { display: flex; justify-content: space-between;
+    align-items: center; gap: var(--s2); border: none; padding: 6px 0; }
+  .dash-table tbody td::before { content: attr(data-th); color: var(--muted);
+    font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .06em;
+    font-weight: 700; }
+}
+.demo-card .lede { color: var(--muted); font-size: var(--text-sm); margin: 0 0 var(--s2); }
+.demo-actions { display: flex; gap: var(--s1); flex-wrap: wrap; margin-bottom: var(--s2); }
+.demo-steps { list-style: none; margin: 0 0 var(--s1); padding: 0; }
+.demo-steps li { display: flex; gap: var(--s2); align-items: flex-start;
+  padding: var(--s1) 0; border-bottom: 1px solid var(--border); }
+.demo-steps li:last-child { border-bottom: 0; }
+.st-ic { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--muted); display: inline-flex; align-items: center;
+  justify-content: center; font-size: var(--text-sm); color: var(--muted); }
+.demo-steps li.active .st-ic { border-color: var(--accent); color: var(--accent);
+  animation: st-pulse 1s infinite; }
+.demo-steps li.done .st-ic { border-color: var(--success); background: var(--success);
+  color: #fff; }
+.demo-steps li.failed .st-ic { border-color: var(--danger); background: var(--danger);
+  color: #fff; }
+.demo-steps li.done .st-ic::before { content: "✓"; }
+.demo-steps li.failed .st-ic::before { content: "✕"; }
+.demo-steps li.active .st-ic::before { content: "◌"; }
+@keyframes st-pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+.demo-steps b { display: block; font-size: var(--text-base); }
+.demo-steps .st-sub { color: var(--muted); font-size: var(--text-sm); display: block; }
+.sim-tag { display: inline-block; font-size: var(--text-xs); font-weight: 700;
+  color: var(--warning); background: rgba(245,215,110,.12);
+  border: 1px solid rgba(245,215,110,.5); border-radius: 999px;
+  padding: 1px 8px; margin-left: 6px; vertical-align: middle; }
+.demo-log { background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 10px 12px; font-family: var(--mono);
+  font-size: var(--text-xs); line-height: 1.7; max-height: 220px; overflow-y: auto;
+  margin-bottom: var(--s1); }
+.demo-log .ok { color: var(--success); } .demo-log .err { color: var(--danger); }
+.demo-log .dim { color: var(--muted); } .demo-log .warnl { color: var(--warning); }
+.atk-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.atk-table th, .atk-table td { text-align: left; padding: 8px 10px;
+  border-bottom: 1px solid var(--border); }
+.atk-table th { color: var(--muted); font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: .06em; }
+.res { font-weight: 800; }
+.res.pass { color: var(--success); } .res.fail { color: var(--danger); }
+.res.skip { color: var(--warning); }
+@media (prefers-reduced-motion: reduce) {
+  .demo-steps li.active .st-ic { animation: none; }
+}
+
+/* --- buttons (min 44px touch target) ------------------------------------ */
+.ds-btn, .btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--s1);
+  min-height: 44px; padding: 12px 20px;
+  font: 700 var(--text-base)/1.2 var(--font);
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text);
+  text-decoration: none; cursor: pointer; user-select: none;
+  transition: transform .08s ease, border-color .15s ease, background .15s ease;
+}
+.ds-btn:active, .btn:active { transform: scale(.98); }
+.ds-btn-primary, .btn.primary {
+  background: var(--accent-strong); border-color: var(--accent-strong); color: #fff;
+}
+.ds-btn-danger { background: var(--danger-strong); border-color: var(--danger-strong); color: #fff; }
+.ds-btn-success { background: var(--success-strong); border-color: var(--success-strong); color: #fff; }
+.ds-btn-ghost:hover, .btn:not(.primary):hover { border-color: var(--accent); }
+.ds-btn:disabled, .btn:disabled { opacity: .55; cursor: default; transform: none; }
+.ds-btn-block { width: 100%; }
+
+/* --- badges -------------------------------------------------------------- */
+.ds-badge, .badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-sm); font-weight: 800; letter-spacing: .03em;
+  padding: 6px 12px; border-radius: var(--r-sm); white-space: nowrap;
+  background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border);
+}
+.ds-badge-danger, .badge.active { background: var(--danger-strong); border-color: var(--danger-strong); color: #fff; }
+.ds-badge-success, .badge.resolved { background: var(--success-strong); border-color: var(--success-strong); color: #fff; }
+.ds-badge-warning { background: rgba(245,215,110,.14); border-color: var(--warning-dim); color: var(--warning); }
+.ds-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.badge.active .dot { animation: ds-blink 1.6s infinite; }
+
+/* --- cards ---------------------------------------------------------------- */
+.ds-card, .card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: var(--s2);
+  animation: ds-rise .4s ease both;
+}
+a.card { text-decoration: none; color: inherit; display: block; }
+a.card:active { border-color: var(--accent); }
+
+/* --- toast (non-blocking) -------------------------------------------------- */
+.ds-toast, #map-toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  z-index: 2000; pointer-events: none;
+  background: rgba(13,17,23,.94); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 18px; border-radius: 999px;
+  font-size: var(--text-sm); font-weight: 600; white-space: nowrap;
+  box-shadow: var(--shadow);
+  animation: ds-rise .25s ease both;
+}
+
+/* --- skeleton loader -------------------------------------------------------- */
+.ds-skeleton {
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: ds-shimmer 1.4s infinite linear;
+  color: transparent !important; user-select: none;
+}
+@keyframes ds-shimmer { to { background-position: -200% 0; } }
+
+/* --- modal ------------------------------------------------------------------ */
+.ds-modal-backdrop {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,.6); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: var(--s2);
+  animation: ds-fade-in .2s ease both;
+}
+.ds-modal-backdrop[hidden] { display: none; }
+.ds-modal {
+  width: 100%; max-width: 420px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: var(--s3);
+  box-shadow: var(--shadow);
+  animation: ds-rise .25s ease both;
+}
+.ds-modal h3 { font-size: var(--text-xl); margin-bottom: var(--s1); }
+.ds-modal p { color: var(--muted); margin: 0 0 var(--s3); }
+.ds-modal-actions { display: flex; gap: var(--s1); justify-content: flex-end; }
+.ds-modal-actions .ds-btn, .ds-modal-actions .btn { flex: 1; }
+
+/* --- motion ------------------------------------------------------------------ */
+@keyframes ds-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ds-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes ds-blink { 50% { opacity: .5; } }
+@keyframes ds-ping {
+  0% { transform: scale(.4); opacity: 1; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  body { animation: none; }
+}
+
+/* --- page-specific --- */
+.app-header { padding: var(--s3) var(--s2) var(--s2); }
+.app-header .brand { font-size: var(--text-2xl); font-weight: 800; letter-spacing: -.01em; }
+.app-header .brand span { color: var(--muted); font-weight: 400; font-size: var(--text-lg); }
+.app-header .sub { color: var(--muted); margin: var(--s1) 0 var(--s2); }
+.app-header .actions { display: flex; gap: var(--s1); flex-wrap: wrap; }
+/* header toggles: language + high contrast */
+.toggles { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: var(--s1); }
+.toggle-btn { min-width: 44px; min-height: 44px; padding: 8px 14px;
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: var(--text-sm);
+  font-weight: 700; cursor: pointer; }
+.toggle-btn:hover { border-color: var(--accent); }
+.toggle-btn[aria-pressed="true"] { border-color: var(--warning); color: var(--warning); }
+/* visible keyboard focus everywhere */
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+/* high-contrast mode */
+body.hc { --bg: #000; --surface: #000; --surface-2: #111;
+  --border: #fff; --text: #fff; --muted: #e8e8e8;
+  --danger: #ff7b72; --success: #56d364; --warning: #ffd60a; --accent: #79c0ff; }
+body.hc .ds-card, body.hc .dev-row, body.hc .sim-res { border-width: 2px; }
+body.hc :focus-visible { outline: 3px solid #ffd60a; }
+body.hc .ds-skeleton { opacity: .35; }
+.grid-2 { display: grid; gap: var(--s3); }
+@media (min-width: 1024px) {
+  .grid-2 { grid-template-columns: 1fr 1.4fr; align-items: start; }
+}
+/* alert + device rows (built by JS) */
+.card { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s1); }
+.info { flex: 1; min-width: 0; }
+.info b { display: block; font-size: var(--text-lg); }
+.dim { color: var(--muted); font-size: var(--text-sm); }
+.arrow { color: var(--muted); font-size: 1.6rem; line-height: 1; }
+.dev { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s1); }
+.dev .info b { font-size: var(--text-base); }
+.seen { font-size: var(--text-sm); font-weight: 600; white-space: nowrap; }
+.seen.ok { color: var(--success); }
+.seen.stale { color: var(--muted); }
+.seen.never { color: var(--warning); }
+.empty { color: var(--muted); border: 1px dashed var(--border); border-radius: var(--r-lg);
+  padding: var(--s3); text-align: center; }
+.skel-row { height: 76px; margin-bottom: var(--s1); }
+</style>
+</head>
+<body>
+<header class="app-header ds-container">
+  <div class="toggles">
+    <button id="lang-toggle" class="toggle-btn" type="button">नेपाली</button>
+    <button id="hc-toggle" class="toggle-btn" type="button" aria-pressed="false" aria-label="Toggle high-contrast mode">HC</button>
+  </div>
+  <div class="brand">📟 SilentSOS <span>operator</span></div>
+  <p class="sub" data-i18n="common.tagline">Discreet emergency alerts — live demo console</p>
+  <div class="actions">
+    <a class="btn primary" href="/simulator" data-i18n="common.simulator">🧪 Device simulator</a>
+    <a class="btn" href="/security" data-i18n="common.security">🔒 Security audit log</a>
+  </div>
+</header>
+<main class="ds-container dash-stack">
+  <section class="ds-card demo-card" aria-label="Demo scenario">
+    <h2 class="ds-section-title" data-i18n="home.demo_title">🎬 Demo scenario</h2>
+    <p class="lede" data-i18n="home.demo_lede">Plays a scripted story end-to-end on its own: triple-press →
+      encrypted alert → a walk through Biratnagar with live location updates →
+      a simulated contact acknowledgement → resolve. About 35 seconds.</p>
+    <div class="demo-actions">
+      <button class="btn primary" id="demo-run" data-i18n="home.demo_run">▶ Run demo scenario</button>
+      <button class="btn" id="demo-stop" hidden data-i18n="home.demo_stop">⏹ Stop</button>
+      <button class="btn" id="demo-attack" data-i18n="home.demo_attack">Skip to attack demo</button>
+    </div>
+    <ol class="demo-steps" id="demo-steps" hidden>
+      <li data-step="press"><span class="st-ic"></span><div><b data-i18n="home.step_press">Device triple-press detected</b><span class="st-sub"></span></div></li>
+      <li data-step="alert"><span class="st-ic"></span><div><b data-i18n="home.step_alert">Encrypted alert sent and verified</b><span class="st-sub"></span></div></li>
+      <li data-step="notify"><span class="st-ic"></span><div><b data-i18n="home.step_notify">Contacts notified</b><span class="st-sub"></span></div></li>
+      <li data-step="walk"><span class="st-ic"></span><div><b data-i18n="home.step_walk">Simulated walk — location updates</b><span class="st-sub"></span></div></li>
+      <li data-step="ack"><span class="st-ic"></span><div><b><span data-i18n="home.step_ack">Asha Sharma acknowledged</span> <span class="sim-tag" data-i18n="home.step_ack_tag">simulated contact</span></b><span class="st-sub"></span></div></li>
+      <li data-step="resolve"><span class="st-ic"></span><div><b data-i18n="home.step_resolve">Alert resolved</b><span class="st-sub"></span></div></li>
+    </ol>
+    <div class="demo-log" id="demo-log" hidden aria-live="polite"></div>
+    <div id="demo-track" hidden style="margin-bottom: var(--s1)"></div>
+    <div id="demo-attack-results" hidden></div>
+  </section>
+
+  <section aria-label="Key metrics">
+    <div class="kpi-grid" id="kpis">
+      <div class="ds-card kpi"><div class="kpi-label">Active alerts</div><div class="kpi-val"><div class="ds-skeleton skel-kpi"></div></div></div>
+      <div class="ds-card kpi"><div class="kpi-label">Devices online</div><div class="kpi-val"><div class="ds-skeleton skel-kpi"></div></div></div>
+      <div class="ds-card kpi"><div class="kpi-label">Avg response time</div><div class="kpi-val"><div class="ds-skeleton skel-kpi"></div></div></div>
+      <div class="ds-card kpi"><div class="kpi-label">Resolved today</div><div class="kpi-val"><div class="ds-skeleton skel-kpi"></div></div></div>
+    </div>
+  </section>
+
+  <section class="ds-card" aria-label="Activity chart">
+    <h2 class="ds-section-title" data-i18n="home.chart_title">📊 Alerts &amp; response time — last 7 days</h2>
+    <div class="chart-wrap" id="chart-wrap"><div class="ds-skeleton skel-chart"></div></div>
+    <div class="empty" id="chart-empty" hidden><span class="big">📊</span><span data-i18n="home.chart_empty">No alert data yet — run the demo scenario to populate the chart.</span></div>
+  </section>
+
+  <div class="grid-2">
+    <section aria-label="Devices">
+      <h2 class="ds-section-title" data-i18n="home.devices_title">Devices</h2>
+      <div id="devices">
+        <div class="ds-skeleton skel-row"></div>
+        <div class="ds-skeleton skel-row"></div>
+      </div>
+    </section>
+    <section aria-label="Recent alerts">
+      <h2 class="ds-section-title" data-i18n="home.alerts_title">Recent alerts</h2>
+      <div id="alerts">
+        <div class="ds-skeleton skel-row"></div>
+        <div class="ds-skeleton skel-row"></div>
+        <div class="ds-skeleton skel-row"></div>
+      </div>
+    </section>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function ago(ts) {
+  const s = Math.max(0, Math.floor(Date.now() / 1000) - ts);
+  if (s < 60) return I18N.t("common.ago_s", { n: s });
+  const m = Math.floor(s / 60);
+  if (m < 60) return I18N.t("common.ago_m", { n: m });
+  return I18N.t("common.ago_h", { n: Math.floor(m / 60), m: m % 60 });
+}
+function fmtDur(s) {
+  s = Math.max(0, Math.round(s));
+  if (s < 60) return s + "s";
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + "m " + (s % 60) + "s";
+  return Math.floor(m / 60) + "h " + (m % 60) + "m";
+}
+
+function renderStats(st) {
+  const k = st.kpis;
+  const T = I18N.t;
+  const defs = [
+    ["home.kpi_active", String(k.active_alerts),
+     k.active_alerts ? T("home.kpi_active_sub_some") : T("home.kpi_active_sub_none")],
+    ["home.kpi_devices", k.devices_online + "/" + k.devices_total,
+     k.devices_total ? T("home.kpi_devices_sub") : T("home.kpi_devices_sub_none")],
+    ["home.kpi_resp",
+     k.avg_response_s == null ? "—" : fmtDur(k.avg_response_s),
+     k.avg_response_n ? T("home.kpi_resp_sub", { n: k.avg_response_n })
+                      : T("home.kpi_resp_sub_none")],
+    ["home.kpi_resolved", String(k.resolved_today), T("home.kpi_resolved_sub")],
+  ];
+  document.getElementById("kpis").innerHTML = defs.map(([key, val, sub]) =>
+    `<div class="ds-card kpi"><div class="kpi-label">${T(key)}</div>` +
+    `<div class="kpi-val">${val}</div><div class="kpi-sub">${sub}</div></div>`
+  ).join("");
+  renderChart(st.series);
+}
+
+let dashChart = null;
+function renderChart(series) {
+  const wrap = document.getElementById("chart-wrap");
+  const empty = document.getElementById("chart-empty");
+  const hasData = (series.alerts || []).some(n => n > 0);
+  if (!hasData || !window.Chart) {
+    wrap.hidden = true;
+    empty.hidden = false;
+    empty.innerHTML = '<span class="big">📊</span><span>' + esc(hasData
+      ? I18N.t("home.chart_cdn_fail")
+      : I18N.t("home.chart_empty")) + "</span>";
+    return;
+  }
+  wrap.hidden = false;
+  empty.hidden = true;
+  wrap.innerHTML = '<canvas id="dash-chart" aria-label="' +
+    esc(I18N.t("home.chart_aria")) + '"></canvas>';
+  if (dashChart) dashChart.destroy();
+  const MUT = "#8b949e", GRID = "rgba(255,255,255,.06)";
+  dashChart = new Chart(document.getElementById("dash-chart"), {
+    data: {
+      labels: series.labels,
+      datasets: [
+        { type: "bar", label: I18N.t("home.chart_alerts"), data: series.alerts, yAxisID: "y",
+          backgroundColor: "rgba(88,166,255,.55)", borderRadius: 4 },
+        { type: "line", label: I18N.t("home.chart_resp"), data: series.avg_response_s,
+          yAxisID: "y1", borderColor: "#f5d76e", backgroundColor: "#f5d76e",
+          tension: .3, spanGaps: true },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { labels: { color: MUT } } },
+      scales: {
+        x: { ticks: { color: MUT }, grid: { color: GRID } },
+        y: { beginAtZero: true, ticks: { precision: 0, color: MUT },
+             grid: { color: GRID },
+             title: { display: true, text: I18N.t("home.chart_y_alerts"), color: MUT } },
+        y1: { position: "right", beginAtZero: true, ticks: { color: MUT },
+              grid: { drawOnChartArea: false },
+              title: { display: true, text: I18N.t("home.chart_y_seconds"), color: MUT } },
+      },
+    },
+  });
+}
+
+function sigLevel(ageS) {
+  if (ageS == null) return 0;
+  if (ageS < 60) return 4;
+  if (ageS < 300) return 3;
+  if (ageS < 900) return 2;
+  return 1;
+}
+
+function renderDevices(devices, battByDevice) {
+  const el = document.getElementById("devices");
+  const T = I18N.t;
+  if (!devices.length) {
+    el.innerHTML = '<div class="empty"><span class="big">📡</span>' +
+      esc(T("home.devices_empty")) + "</div>";
+    return;
+  }
+  el.innerHTML = "";
+  const nowS = Date.now() / 1000;
+  for (const d of devices) {
+    const age = d.last_seen == null ? null : Math.max(0, nowS - d.last_seen);
+    const online = age !== null && age <= 300;
+    const batt = battByDevice[d.device_id];
+    const row = document.createElement("div");
+    row.className = "dev-row ds-card";
+    const top = document.createElement("div");
+    top.className = "dev-top";
+    const name = document.createElement("b");
+    name.textContent = d.device_id;
+    const right = document.createElement("span");
+    right.style.display = "inline-flex";
+    right.style.gap = "8px";
+    right.style.alignItems = "center";
+    const sig = document.createElement("span");
+    sig.className = "sig lvl" + sigLevel(age);
+    sig.title = T(online ? "home.sig_strong" : "home.sig_lost");
+    sig.setAttribute("role", "img");
+    sig.setAttribute("aria-label", T(online ? "home.sig_strong" : "home.sig_lost"));
+    sig.innerHTML = "<i></i><i></i><i></i><i></i>";
+    const badge = document.createElement("span");
+    badge.className = "badge " + (online ? "online" : "offline");
+    badge.textContent = T(online ? "common.online" : "common.offline");
+    right.appendChild(sig);
+    right.appendChild(badge);
+    top.appendChild(name);
+    top.appendChild(right);
+    const sub = document.createElement("div");
+    sub.className = "dev-sub";
+    sub.textContent = (d.last_seen == null ? T("home.dev_never")
+        : T("home.dev_last_seen", { ago: ago(d.last_seen) })) +
+      " · " + (batt != null ? "🔋 " + batt + "%" : "🔋 —") +
+      (d.active ? "" : " · " + T("home.dev_deactivated"));
+    row.appendChild(top);
+    row.appendChild(sub);
+    el.appendChild(row);
+  }
+}
+
+function renderAlerts(alerts) {
+  const el = document.getElementById("alerts");
+  const T = I18N.t;
+  if (!alerts.length) {
+    el.innerHTML = '<div class="empty"><span class="big">🎉</span>' +
+      esc(T("home.alerts_empty")) + "</div>";
+    return;
+  }
+  const tbl = document.createElement("table");
+  tbl.className = "dash-table";
+  const thead = document.createElement("thead");
+  const th = document.createElement("tr");
+  for (const key of ["home.th_status", "home.th_device", "home.th_created", "home.th_response"]) {
+    const c = document.createElement("th");
+    c.textContent = T(key);
+    th.appendChild(c);
+  }
+  th.appendChild(document.createElement("th"));
+  thead.appendChild(th);
+  tbl.appendChild(thead);
+  const tb = document.createElement("tbody");
+  const TH = [T("home.th_status"), T("home.th_device"), T("home.th_created"), T("home.th_response"), ""];
+  for (const a of alerts) {
+    const tr = document.createElement("tr");
+    const active = a.status === "active";
+    const resp = a.first_acked_at != null ? fmtDur(a.first_acked_at - a.created_at) : "—";
+    const cells = [
+      `<span class="badge ${active ? "active" : "resolved"}">${T(active ? "home.st_active" : "home.st_resolved")}</span>`,
+      esc(a.owner + " · " + a.device_id),
+      esc(ago(a.created_at)),
+      esc(resp),
+      `<a class="btn" href="/track/${a.alert_id}">${T("common.view")}</a>`,
+    ];
+    cells.forEach((html, i) => {
+      const td = document.createElement("td");
+      td.setAttribute("data-th", TH[i]);
+      td.innerHTML = html;
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  }
+  tbl.appendChild(tb);
+  el.innerHTML = "";
+  el.appendChild(tbl);
+}
+
+async function refresh() {
+  const [stats, devData, alertData] = await Promise.all([
+    fetch("/api/stats").then(r => r.json()).catch(() => null),
+    fetch("/api/devices").then(r => r.json()).catch(() => null),
+    fetch("/api/alerts?limit=20").then(r => r.json()).catch(() => null),
+  ]);
+  if (stats) renderStats(stats);
+  const battByDevice = {};
+  if (alertData) {
+    for (const a of (alertData.alerts || []))
+      if (!(a.device_id in battByDevice) && a.battery != null)
+        battByDevice[a.device_id] = a.battery;
+    renderAlerts(alertData.alerts || []);
+  }
+  if (devData) renderDevices(devData.devices || [], battByDevice);
+}
+refresh();
+setInterval(refresh, 10000);
+// Re-render dynamic text on language switch.
+document.addEventListener("silentsos:lang", refresh);
+// Register the service worker for installability + offline use.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(function () {});
+}
+
+/* ---- Demo scenario ---------------------------------------------------------
+   Scripted story that runs on its own (~35 s). All device traffic goes
+   through /api/simulator/send (server-side encryption, real protocol);
+   ack/resolve use the normal endpoints. Biratnagar route, 4 updates —
+   1 alert + 4 updates stays inside the 5/min protocol rate limit. */
+const DEMO_ROUTE = [
+  [26.4525, 87.2718],
+  [26.4533, 87.2727],
+  [26.4541, 87.2736],
+  [26.4549, 87.2745],
+  [26.4557, 87.2754],
+];
+const DEMO_UPD_TIMES = [6500, 9500, 12500, 15500]; // ms after start
+const DEMO_ACK_AT = 15000, DEMO_END_AT = 30000;
+let demoAbort = false, demoRunning = false;
+
+const demoSteps = document.getElementById("demo-steps");
+const demoLog = document.getElementById("demo-log");
+const demoTrack = document.getElementById("demo-track");
+const demoAtk = document.getElementById("demo-attack-results");
+const btnRun = document.getElementById("demo-run");
+const btnStop = document.getElementById("demo-stop");
+
+function dlog(msg, cls) {
+  const t = new Date().toLocaleTimeString();
+  const div = document.createElement("div");
+  if (cls) div.className = cls;
+  div.textContent = `[${t}] ${msg}`;
+  demoLog.appendChild(div);
+  demoLog.scrollTop = demoLog.scrollHeight;
+}
+function setStep(name, state, sub) {
+  const li = demoSteps.querySelector(`[data-step="${name}"]`);
+  li.classList.remove("active", "done", "failed");
+  if (state) li.classList.add(state);
+  if (sub !== undefined) li.querySelector(".st-sub").textContent = sub;
+}
+function demoReset() {
+  demoAbort = false;
+  demoSteps.hidden = false;
+  demoLog.hidden = false;
+  demoLog.innerHTML = "";
+  demoTrack.hidden = true;
+  demoTrack.innerHTML = "";
+  demoAtk.hidden = true;
+  demoAtk.innerHTML = "";
+  demoSteps.querySelectorAll("li").forEach(li => {
+    li.classList.remove("active", "done", "failed");
+    li.querySelector(".st-sub").textContent = "";
+  });
+}
+async function apiSend(body) {
+  const r = await fetch("/api/simulator/send", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await r.json().catch(() => ({}));
+  return { ok: r.ok, status: r.status, alert_id: data.alert_id };
+}
+
+async function runScenario() {
+  if (demoRunning) return;
+  demoRunning = true;
+  btnRun.disabled = true;
+  btnStop.hidden = false;
+  demoReset();
+  const t0 = Date.now();
+  const elapsed = () => Date.now() - t0;
+  const at = ms => new Promise(res => {
+    const tick = () => {
+      if (demoAbort || elapsed() >= ms) res();
+      else setTimeout(tick, 200);
+    };
+    tick();
+  });
+  dlog(I18N.t("home.demo_log_started"), "dim");
+  try {
+    // 1. triple-press
+    setStep("press", "active");
+    dlog(I18N.t("home.demo_log_press"));
+    await at(1500);
+    if (demoAbort) throw new Error("stopped");
+    setStep("press", "done", "button: 3 presses / 2 s window");
+
+    // 2. encrypted alert
+    setStep("alert", "active");
+    dlog(I18N.t("home.demo_log_sending"));
+    const s = await apiSend({ device_id: "dev-001", type: "alert",
+      lat: DEMO_ROUTE[0][0], lon: DEMO_ROUTE[0][1], battery: 90 });
+    if (!s.ok) throw new Error(I18N.t("home.demo_log_rejected", { code: s.status }));
+    const alertId = s.alert_id;
+    const det0 = await (await fetch("/api/alerts/" + alertId)).json();
+    if (det0.created_at * 1000 < t0 - 1000)
+      dlog(I18N.t("home.demo_log_cooldown"), "warnl");
+    dlog(I18N.t("home.demo_log_accepted"), "ok");
+    demoTrack.hidden = false;
+    const a = document.createElement("a");
+    a.className = "btn"; a.target = "_blank"; a.rel = "noopener";
+    a.href = "/track/" + alertId;
+    a.textContent = I18N.t("home.demo_log_watch");
+    demoTrack.appendChild(a);
+    setStep("alert", "done", "alert_id " + alertId.slice(0, 8) + "…");
+
+    // 3. contacts notified
+    setStep("notify", "active");
+    await at(3500);
+    if (demoAbort) throw new Error("stopped");
+    const det = await (await fetch("/api/alerts/" + alertId)).json();
+    const tier1 = det.contacts.filter(c => c.tier === 1);
+    dlog(`🔔 ${tier1.length} tier-1 contact(s) notified via Telegram`);
+    setStep("notify", "done", tier1.map(c => c.name).join(", "));
+    const asha = det.contacts.find(c => c.name === "Asha Sharma");
+
+    // 4. simulated walk — 4 location updates, battery 90 → 80
+    setStep("walk", "active", "Biratnagar route");
+    let acked = false;
+    for (let i = 0; i < DEMO_UPD_TIMES.length; i++) {
+      await at(DEMO_UPD_TIMES[i]);
+      if (demoAbort) throw new Error("stopped");
+      if (!acked && elapsed() >= DEMO_ACK_AT) { acked = await doDemoAck(alertId, asha); }
+      const batt = Math.round(90 - (i + 1) * (10 / DEMO_UPD_TIMES.length));
+      const u = await apiSend({ device_id: "dev-001", type: "update",
+        lat: DEMO_ROUTE[i + 1][0], lon: DEMO_ROUTE[i + 1][1], battery: batt });
+      dlog(`📍 update ${i + 1}/${DEMO_UPD_TIMES.length} — ${DEMO_ROUTE[i + 1][0].toFixed(4)}, ` +
+           `${DEMO_ROUTE[i + 1][1].toFixed(4)} · battery ${batt}%` +
+           (u.ok ? "" : ` — HTTP ${u.status}`), u.ok ? "" : "err");
+      setStep("walk", "active", `update ${i + 1}/${DEMO_UPD_TIMES.length} · 🔋 ${batt}%`);
+    }
+    if (!acked) { await at(DEMO_ACK_AT); acked = await doDemoAck(alertId, asha); }
+    setStep("walk", "done", I18N.t("home.demo_log_walk"));
+
+    // 6. resolve
+    await at(DEMO_END_AT);
+    if (demoAbort) throw new Error("stopped");
+    setStep("resolve", "active");
+    const rs = await fetch("/api/alerts/" + alertId + "/safe", { method: "POST" });
+    if (!rs.ok) throw new Error(I18N.t("home.demo_log_resolve_fail", { code: rs.status }));
+    dlog(I18N.t("home.demo_log_resolved"), "ok");
+    setStep("resolve", "done");
+  } catch (e) {
+    if (demoAbort) dlog(I18N.t("home.demo_log_stopped"), "warnl");
+    else {
+      dlog("✗ " + e.message, "err");
+      demoSteps.querySelector("li.active")?.classList.add("failed");
+    }
+  } finally {
+    demoRunning = false;
+    btnRun.disabled = false;
+    btnStop.hidden = true;
+    refresh();
+  }
+}
+
+async function doDemoAck(alertId, asha) {
+  // The *person* is simulated; the ack itself is a real ack row.
+  setStep("ack", "active");
+  dlog(I18N.t("home.demo_log_ack_wait"), "warnl");
+  await new Promise(r => setTimeout(r, 1200));
+  if (!asha) { dlog(I18N.t("home.demo_log_ack_missing"), "err"); return false; }
+  const r = await fetch("/api/alerts/" + alertId + "/ack", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contact_id: asha.id }),
+  });
+  if (!r.ok) { dlog(I18N.t("home.demo_log_ack_fail", { code: r.status }), "err"); return false; }
+  dlog(I18N.t("home.demo_log_acked"), "ok");
+  setStep("ack", "done", I18N.t("home.step_ack_tag") + " · " + new Date().toLocaleTimeString());
+  return true;
+}
+
+btnRun.addEventListener("click", runScenario);
+btnStop.addEventListener("click", () => { demoAbort = true; });
+
+/* ---- Skip to attack demo -------------------------------------------------- */
+document.getElementById("demo-attack").addEventListener("click", async () => {
+  demoAbort = true;
+  if (demoRunning) await new Promise(r => setTimeout(r, 600));
+  demoReset();
+  btnRun.disabled = true;
+  dlog(I18N.t("home.demo_log_attack_run"), "dim");
+  try {
+    const r = await fetch("/api/demo/attack", { method: "POST" });
+    const data = await r.json();
+    demoAtk.hidden = false;
+    const tbl = document.createElement("table");
+    tbl.className = "atk-table";
+    const T = I18N.t;
+    tbl.innerHTML = "<thead><tr><th>" + T("home.atk_th_attack") + "</th><th>" +
+      T("home.atk_th_expected") + "</th><th>" + T("home.atk_th_got") + "</th><th>" +
+      T("home.atk_th_result") + "</th></tr></thead>";
+    const tb = document.createElement("tbody");
+    for (const row of data.results) {
+      const tr = document.createElement("tr");
+      const cls = row.result === "PASS" ? "pass" : row.result === "FAIL" ? "fail" : "skip";
+      [["name", ""], ["expected", "ds-mono"], ["got", "ds-mono"], ["result", "res " + cls]]
+        .forEach(([k, c]) => {
+          const td = document.createElement("td");
+          if (c) td.className = c;
+          td.textContent = row[k];
+          tr.appendChild(td);
+        });
+      tb.appendChild(tr);
+    }
+    tbl.appendChild(tb);
+    demoAtk.appendChild(tbl);
+    const sum = document.createElement("p");
+    sum.className = "ds-muted";
+    sum.textContent = I18N.t("home.demo_log_attack_blocked", { passed: data.passed, total: data.total });
+    demoAtk.appendChild(sum);
+    dlog(I18N.t("home.demo_log_attack_done", { passed: data.passed, total: data.total }),
+         data.passed === data.total ? "ok" : "err");
+  } catch (e) {
+    dlog(I18N.t("home.demo_log_attack_fail", { err: e.message }), "err");
+  } finally {
+    btnRun.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
