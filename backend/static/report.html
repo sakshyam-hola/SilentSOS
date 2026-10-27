@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Incident report — SilentSOS</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#ffffff">
+<script src="/i18n.js"></script>
+<style>
+  /* Print-first document theme: clean light layout, ink-friendly. */
+  :root {
+    --ink: #1a1a1a; --muted: #555; --line: #ddd; --accent: #b42318;
+    --ok: #18794e; --chip: #f2f2f2; --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8e8e8; color: var(--ink);
+    font: 15px/1.55 -apple-system, "Segoe UI", system-ui, sans-serif; }
+  .page { max-width: 860px; margin: 24px auto; background: #fff;
+    border-radius: var(--radius); box-shadow: 0 2px 12px rgba(0,0,0,.12);
+    padding: 40px 44px; }
+  .actionbar { display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; margin-bottom: 28px; }
+  .btn { font: inherit; cursor: pointer; border: 1px solid var(--line);
+    background: #fff; border-radius: var(--radius); padding: 10px 18px;
+    min-height: 44px; }
+  .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  #lang-toggle { min-width: 88px; }
+  header.doc-head { border-bottom: 3px solid var(--ink); padding-bottom: 16px;
+    margin-bottom: 24px; }
+  header.doc-head h1 { margin: 0 0 4px; font-size: 26px; }
+  .brand { font-size: 13px; color: var(--muted); letter-spacing: .04em; }
+  .incident-id { font-family: ui-monospace, monospace; font-size: 13px;
+    color: var(--muted); word-break: break-all; }
+  section { margin: 28px 0; page-break-inside: avoid; }
+  section h2 { font-size: 18px; margin: 0 0 12px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--line); }
+  dl.grid { display: grid; grid-template-columns: 180px 1fr; gap: 8px 16px; margin: 0; }
+  dl.grid dt { color: var(--muted); font-size: 13px; }
+  dl.grid dd { margin: 0; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); }
+  .mono { font-family: ui-monospace, monospace; font-size: 13px; }
+  .tl { list-style: none; margin: 0; padding: 0; }
+  .tl li { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .tl li:last-child { border-bottom: 0; }
+  .tl .ic { width: 28px; text-align: center; flex: none; }
+  .tl .tm { margin-left: auto; color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .check { list-style: none; margin: 0; padding: 0; }
+  .check li { display: flex; gap: 10px; padding: 7px 0; }
+  .check .mk { color: var(--ok); font-weight: 700; }
+  svg.schematic { width: 100%; height: auto; border: 1px solid var(--line);
+    border-radius: var(--radius); background: #fafafa; }
+  footer.doc-foot { margin-top: 36px; padding-top: 14px;
+    border-top: 1px solid var(--line); color: var(--muted); font-size: 13px;
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .empty { color: var(--muted); font-style: italic; }
+  @media print {
+    body { background: #fff; }
+    .page { margin: 0; max-width: none; box-shadow: none; border-radius: 0;
+      padding: 0; }
+    .no-print { display: none !important; }
+    section { page-break-inside: avoid; }
+    svg.schematic, .check .mk { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  @media (max-width: 640px) {
+    .page { padding: 24px 18px; margin: 0; border-radius: 0; }
+    dl.grid { grid-template-columns: 130px 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="actionbar no-print">
+    <button id="print-btn" class="btn primary" type="button" data-i18n="report.print">🖨️ Print / Save as PDF</button>
+    <button id="lang-toggle" class="btn" type="button" aria-label="Switch language">नेपाली</button>
+  </div>
+
+  <div id="r-body">
+    <header class="doc-head">
+      <div class="brand">SilentSOS</div>
+      <h1 data-i18n="report.title">Incident report</h1>
+      <div class="incident-id" id="r-id"></div>
+    </header>
+
+    <section aria-label="summary">
+      <h2 data-i18n="report.summary">Summary</h2>
+      <dl class="grid" id="r-summary"></dl>
+    </section>
+
+    <section aria-label="trail">
+      <h2 data-i18n="report.trail">Location trail</h2>
+      <div id="r-map"></div>
+      <div id="r-trail-table" style="margin-top:12px"></div>
+    </section>
+
+    <section aria-label="contacts">
+      <h2 data-i18n="report.contacts">Contact response timeline</h2>
+      <ul class="tl" id="r-contacts"></ul>
+    </section>
+
+    <section aria-label="battery">
+      <h2 data-i18n="report.battery">Battery history</h2>
+      <div id="r-battery"></div>
+    </section>
+
+    <section aria-label="security">
+      <h2 data-i18n="report.security">Security verification</h2>
+      <ul class="check" id="r-security"></ul>
+    </section>
+
+    <footer class="doc-foot">
+      <span>Generated by SilentSOS</span>
+      <span id="r-generated"></span>
+    </footer>
+  </div>
+</div>
+
+<script>
+"use strict";
+const alertId = location.pathname.split("/").filter(Boolean).pop();
+const esc = s => String(s ?? "").replace(/[&<>"']/g,
+  c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const T = (k, v) => I18N.t(k, v);
+const fmtT = ts => new Date(ts * 1000).toLocaleString();
+function fmtDur(s) {
+  s = Math.max(0, Math.round(s));
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60;
+  return h ? `${h}h ${m}m` : m ? `${m}m ${r}s` : `${r}s`;
+}
+let lastData = null;
+
+/* --- schematic trail map (no external tiles; prints cleanly) --- */
+function trailSVG(trail) {
+  const W = 640, H = 300, P = 34;
+  const lats = trail.map(p => p.lat), lons = trail.map(p => p.lon);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+  const s = Math.min((W - 2 * P) / ((maxLon - minLon) || 1e-4),
+                     (H - 2 * P) / ((maxLat - minLat) || 1e-4));
+  const X = lon => W / 2 + (lon - (minLon + maxLon) / 2) * s;
+  const Y = lat => H / 2 - (lat - (minLat + maxLat) / 2) * s;
+  const pts = trail.map(p => `${X(p.lon).toFixed(1)},${Y(p.lat).toFixed(1)}`).join(" ");
+  let dots = "";
+  trail.forEach((p, i) => {
+    const last = i === trail.length - 1;
+    dots += `<circle cx="${X(p.lon).toFixed(1)}" cy="${Y(p.lat).toFixed(1)}" r="${last ? 7 : 4}"` +
+      ` fill="${i === 0 ? "#18794e" : last ? "#b42318" : "#555"}" stroke="#fff" stroke-width="1.5">` +
+      `<title>${esc(fmtT(p.ts))} — ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</title></circle>`;
+  });
+  const lbl = (i, txt, dx) =>
+    `<text x="${(X(trail[i].lon) + dx).toFixed(1)}" y="${(Y(trail[i].lat) - 12).toFixed(1)}"` +
+    ` font-size="12" fill="#333">${esc(txt)}</text>`;
+  return `<svg class="schematic" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(T("report.trail"))}">` +
+    (trail.length > 1 ? `<polyline points="${pts}" fill="none" stroke="#b42318" stroke-width="2.5"/>` : "") +
+    dots + lbl(0, T("report.start_pt"), 10) +
+    (trail.length > 1 ? lbl(trail.length - 1, T("report.end_pt"), 10) : "") + `</svg>`;
+}
+
+/* --- battery sparkline --- */
+function batterySVG(pts) {
+  const W = 640, H = 160, P = 34;
+  const t0 = pts[0].ts, t1 = pts[pts.length - 1].ts;
+  const X = ts => P + (t1 === t0 ? 0.5 : (ts - t0) / (t1 - t0)) * (W - 2 * P);
+  const Y = b => H - P - (b / 100) * (H - 2 * P);
+  const line = pts.map(p => `${X(p.ts).toFixed(1)},${Y(p.battery).toFixed(1)}`).join(" ");
+  const dots = pts.map(p =>
+    `<circle cx="${X(p.ts).toFixed(1)}" cy="${Y(p.battery).toFixed(1)}" r="4" fill="#18794e">` +
+    `<title>${esc(fmtT(p.ts))} — ${p.battery}%</title></circle>`).join("");
+  const grid = [0, 25, 50, 75, 100].map(v =>
+    `<line x1="${P}" x2="${W - P}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ddd" stroke-width="1"/>` +
+    `<text x="${P - 6}" y="${Y(v) + 4}" font-size="11" fill="#777" text-anchor="end">${v}%</text>`).join("");
+  return `<svg class="schematic" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(T("report.battery"))}">` +
+    grid + (pts.length > 1 ?
+      `<polyline points="${line}" fill="none" stroke="#18794e" stroke-width="2.5"/>` : "") +
+    dots + `</svg>`;
+}
+
+function row(dt, dd) {
+  return `<dt>${esc(dt)}</dt><dd>${dd}</dd>`;
+}
+
+function render(d, audit) {
+  document.getElementById("r-id").textContent = d.alert_id;
+  const endTs = d.resolved_at || Date.now() / 1000;
+  const firstAck = d.acks.length ? d.acks[0].acked_at : null;
+
+  // summary
+  document.getElementById("r-summary").innerHTML =
+    row(T("report.incident_id"), `<span class="mono">${esc(d.alert_id)}</span>`) +
+    row(T("report.owner"), esc(d.owner_name || "—")) +
+    row(T("report.device"), `<span class="mono">${esc(d.device_id)}</span>`) +
+    row(T("report.status"), esc(d.resolved_at ? T("report.resolved") : T("report.ongoing"))) +
+    row(T("report.started"), esc(fmtT(d.created_at))) +
+    row(T("report.ended"), d.resolved_at ? esc(fmtT(d.resolved_at)) : esc(T("report.ongoing"))) +
+    row(T("report.duration"), esc(fmtDur(endTs - d.created_at))) +
+    (firstAck ? row(T("report.response_time"), esc(fmtDur(firstAck - d.created_at))) : "");
+
+  // trail: map + table
+  const trail = d.trail || [];
+  document.getElementById("r-map").innerHTML = trail.length
+    ? trailSVG(trail)
+    : `<p class="empty">${esc(T("report.trail_empty"))}</p>`;
+  document.getElementById("r-trail-table").innerHTML = trail.length ? `<table>
+      <thead><tr><th>${esc(T("report.col_n"))}</th><th>${esc(T("report.col_time"))}</th>
+      <th>${esc(T("report.col_lat"))}</th><th>${esc(T("report.col_lon"))}</th>
+      <th>${esc(T("report.col_battery"))}</th></tr></thead>
+      <tbody>${trail.map((p, i) => `<tr><td>${i + 1}</td><td class="mono">${esc(fmtT(p.ts))}</td>` +
+        `<td class="mono">${p.lat.toFixed(5)}</td><td class="mono">${p.lon.toFixed(5)}</td>` +
+        `<td>${p.battery == null ? "—" : esc(p.battery + "%")}</td></tr>`).join("")}</tbody></table>` : "";
+
+  // contact response timeline
+  const evs = [];
+  for (const c of d.contacts) {
+    const tier = T(c.tier === 2 ? "report.tier2" : "report.tier1");
+    evs.push({ ts: d.created_at, icon: "🔔",
+      text: `${T("report.notified")} — ${c.name} (${tier})` });
+    if (c.acked) {
+      evs.push({ ts: c.acked_at, icon: "✅", text: `${T("report.acked")} — ${c.name}` });
+    } else if (d.resolved_at) {
+      evs.push({ ts: d.resolved_at, icon: "➖", text: `${T("report.no_response")} — ${c.name}` });
+    }
+  }
+  if (d.escalated_at) evs.push({ ts: d.escalated_at, icon: "⚠️", text: T("report.escalated") });
+  if (d.resolved_at) evs.push({ ts: d.resolved_at, icon: "🏁", text: T("report.resolved") });
+  evs.sort((a, b) => a.ts - b.ts);
+  document.getElementById("r-contacts").innerHTML = evs.map(e =>
+    `<li><span class="ic" aria-hidden="true">${e.icon}</span>` +
+    `<span>${esc(e.text)}</span><span class="tm">${esc(fmtT(e.ts))}</span></li>`).join("");
+
+  // battery history
+  const bpts = trail.filter(p => p.battery != null);
+  document.getElementById("r-battery").innerHTML = bpts.length
+    ? batterySVG(bpts) + `<table style="margin-top:12px"><thead><tr>
+      <th>${esc(T("report.col_time"))}</th><th>${esc(T("report.col_battery"))}</th></tr></thead>
+      <tbody>${bpts.map(p => `<tr><td class="mono">${esc(fmtT(p.ts))}</td>` +
+        `<td>${esc(p.battery + "%")}</td></tr>`).join("")}</tbody></table>`
+    : `<p class="empty">${esc(T("report.battery_empty"))}</p>`;
+
+  // security verification summary (derived from the audit trail)
+  const nUpd = audit.filter(e => e.reason === "update_appended").length;
+  const items = [
+    T("report.sec_device"),
+    T("report.sec_tag"),
+    T("report.sec_time"),
+    T("report.sec_nonce"),
+    T("report.sec_updates", { n: nUpd }),
+  ];
+  if (d.escalated_at) items.push(T("report.sec_escalated"));
+  if (d.resolved_at) items.push(T("report.sec_resolved"));
+  document.getElementById("r-security").innerHTML = items.map(t =>
+    `<li><span class="mk" aria-hidden="true">✓</span><span>${esc(t)}</span></li>`).join("");
+
+  document.getElementById("r-generated").textContent =
+    T("report.generated", { when: new Date().toLocaleString() });
+}
+
+async function init() {
+  try {
+    const [ar, aur] = await Promise.all([
+      fetch("/api/alerts/" + encodeURIComponent(alertId)),
+      fetch("/api/audit?limit=500"),
+    ]);
+    if (!ar.ok) throw new Error("not found");
+    const d = await ar.json();
+    const entries = (await aur.json()).entries || [];
+    lastData = { d, audit: entries.filter(e => e.alert_id === alertId) };
+    render(d, lastData.audit);
+  } catch (e) {
+    document.getElementById("r-body").innerHTML =
+      `<p class="empty">${esc(T("report.not_found"))}</p>`;
+  }
+}
+
+document.getElementById("print-btn").addEventListener("click", () => window.print());
+document.addEventListener("silentsos:lang", () => { if (lastData) render(lastData.d, lastData.audit); });
+// Note: I18N.apply()/wireToggles() run automatically on DOMContentLoaded.
+init();
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(function () {});
+}
+</script>
+</body>
+</html>
